@@ -3,14 +3,14 @@
 Status: `[ ]` todo · `[~]` in progress · `[x]` done. Each phase ends with: tests green,
 ruff clean, docs updated, commit, summary, STOP.
 
-## Phase 1 – Skeleton
-- [ ] `pyproject.toml` (deps, ruff, pytest config), `.gitignore`, `.env.example`
-- [ ] `app/config.py` – `Settings` (env prefix-free, `.env` support, `SecretStr` for keys)
-- [ ] `app/logging.py` – logging setup, `redact()` helper for secrets / message previews
-- [ ] `app/main.py` – `create_app()`, `GET /health` (status, version)
-- [ ] `Dockerfile` (python:3.12-slim, non-root), `docker-compose.yml`
-- [ ] `.pre-commit-config.yaml` (ruff, ruff-format)
-- [ ] tests: config loading, redaction, /health
+## Phase 1 – Skeleton ✅
+- [x] `pyproject.toml` (deps, ruff, pytest config), `.gitignore`, `.env.example`
+- [x] `app/config.py` – `Settings` (env prefix-free, `.env` support, `SecretStr` for keys)
+- [x] `app/logging.py` – logging setup, `redact()` helper for secrets / message previews
+- [x] `app/main.py` – `create_app()`, `GET /health` (status, version)
+- [x] `Dockerfile` (python:3.12-slim, non-root), `docker-compose.yml`
+- [x] `.pre-commit-config.yaml` (ruff, ruff-format)
+- [x] tests: config loading, redaction, /health
 
 ## Phase 2 – WhatsApp gateway (Cloud API)
 - [ ] `GET /webhook` – hub.mode/verify_token/challenge handshake
