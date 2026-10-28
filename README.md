@@ -20,6 +20,26 @@ uvicorn app.main:create_app --factory --reload
 curl localhost:8000/health
 ```
 
+## API keys
+
+```bash
+python -m app.cli secret                  # paste into .env as ADMIN_API_KEY
+python -m app.cli keys create my-bot      # key for a client app, shown once
+python -m app.cli keys list
+python -m app.cli keys revoke <id>
+```
+
+## Using the API (OpenAI-compatible)
+
+```python
+from openai import OpenAI
+client = OpenAI(base_url="http://<server>:8080/v1", api_key="sk-dev-...")
+client.chat.completions.create(model="coder", messages=[{"role": "user", "content": "Hi"}])
+```
+
+Endpoints: `POST /v1/chat/completions` (incl. `stream: true`), `GET /v1/models`,
+`GET /v1/admin/usage` (admin key).
+
 ## Docker
 
 ```bash

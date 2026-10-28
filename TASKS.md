@@ -22,11 +22,12 @@ ruff clean, docs updated, commit, summary, STOP.
 - [x] remove WhatsApp settings; add `MODELS_CONFIG`, `OLLAMA_URL`
 - [x] tests via `httpx.MockTransport`
 
-## Phase 3 – Public API
-- [ ] SQLite API-key store (hashed keys, labels), CLI to create/revoke keys
-- [ ] `POST /v1/chat/completions` (OpenAI schema, `model` = agent or model alias), streaming (SSE)
-- [ ] `GET /v1/models` (agents + aliases)
-- [ ] tests
+## Phase 3 – Public API ✅
+- [x] SQLite API-key store (hashed keys, labels), CLI to create/revoke keys
+- [x] `POST /v1/chat/completions` (OpenAI schema, `model` = agent or model alias), streaming (SSE; single delta for now — token streaming later)
+- [x] `GET /v1/models` (agents + aliases)
+- [x] tests
+- [x] `GET /v1/admin/usage` (admin key)
 
 ## Phase 4 – Agent profiles
 - [ ] `config/agents.yaml`: name, description, system prompt, model alias, tools, temperature, max_steps

@@ -1,8 +1,10 @@
 """Application settings loaded from environment variables / `.env`."""
 
 from functools import lru_cache
+from pathlib import Path
 from typing import Literal
 
+from pydantic import SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -16,6 +18,13 @@ class Settings(BaseSettings):
     # Model layer
     models_config: str = "config/models.yaml"
     ollama_url: str = "http://localhost:11434"
+
+    # Public API: admin key (generate with `python -m app.cli secret`)
+    admin_api_key: SecretStr = SecretStr("")
+
+    @property
+    def db_path(self) -> str:
+        return str(Path(self.data_dir) / "devagent.db")
 
 
 @lru_cache
