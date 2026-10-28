@@ -9,6 +9,7 @@ from pathlib import Path
 
 from fastapi import FastAPI
 
+from app.agent.loop import AgentRunner
 from app.agents.profiles import AgentRegistry
 from app.api.keys import KeyStore
 from app.api.routes import router as api_router
@@ -17,6 +18,7 @@ from app.config import Settings, get_settings
 from app.llm.base import LLMClient
 from app.llm.registry import ModelRegistry, load_config
 from app.logging import setup_logging
+from app.sandbox.runner import DockerSandbox, LocalRunner, SandboxRunner
 from app.tasks.store import Task, TaskStore
 from app.tasks.webhook import WebhookSender
 from app.tasks.worker import Worker
@@ -31,8 +33,27 @@ def _app_version() -> str:
         return "0.0.0"
 
 
-def create_app(settings: Settings | None = None, llm: LLMClient | None = None) -> FastAPI:
-    """`llm` overrides the model registry (tests); it must expose the registry interface."""
+def _make_sandbox(settings: Settings) -> SandboxRunner:
+    if settings.sandbox_backend == "local":
+        log.warning("SANDBOX_BACKEND=local: agent commands run WITHOUT isolation")
+        return LocalRunner(settings.sandbox_timeout, settings.sandbox_max_output)
+    return DockerSandbox(
+        image=settings.sandbox_image,
+        cpus=settings.sandbox_cpus,
+        memory=settings.sandbox_memory,
+        pids_limit=settings.sandbox_pids_limit,
+        timeout_s=settings.sandbox_timeout,
+        max_output=settings.sandbox_max_output,
+    )
+
+
+def create_app(
+    settings: Settings | None = None,
+    llm: LLMClient | None = None,
+    sandbox: SandboxRunner | None = None,
+) -> FastAPI:
+    """`llm` / `sandbox` override the real components (tests). `llm` must expose the
+    registry interface (aliases, config, usage)."""
     settings = settings or get_settings()
     setup_logging(settings.log_level)
 
@@ -52,9 +73,20 @@ def create_app(settings: Settings | None = None, llm: LLMClient | None = None) -
         app.state.llm.usage.load(usage_path)
         app.state.webhooks = WebhookSender(settings.webhook_secret.get_secret_value())
         app.state.tasks = TaskStore(settings.db_path)
+        app.state.runner = AgentRunner(
+            app.state.llm,
+            app.state.agents,
+            sandbox or _make_sandbox(settings),
+            settings.workspaces_dir,
+            http_allowlist=settings.http_allowlist_list,
+        )
 
         async def run_task(task: Task) -> str:
-            return await _simple_agent_call(app, task.agent, task.messages)
+            if app.state.agents.get(task.agent) is None:  # plain model alias
+                resp = await app.state.llm.chat(task.messages, model=task.agent)
+                return resp.content or ""
+            result = await app.state.runner.run(task.agent, task.messages, client=task.client)
+            return result.content
 
         async def notify(task: Task) -> None:
             if task.webhook_url:
@@ -90,14 +122,3 @@ def create_app(settings: Settings | None = None, llm: LLMClient | None = None) -
         return {"status": "ok", "version": app.version}
 
     return app
-
-
-async def _simple_agent_call(app: FastAPI, name: str, messages: list[dict]) -> str:
-    """Single LLM call with the agent's prompt (replaced by the agent loop in Phase 7)."""
-    agent = app.state.agents.get(name)
-    if agent is not None:
-        messages = [{"role": "system", "content": agent.system_prompt}, *messages]
-        resp = await app.state.llm.chat(messages, model=agent.model, temperature=agent.temperature)
-    else:
-        resp = await app.state.llm.chat(messages, model=name)
-    return resp.content or ""

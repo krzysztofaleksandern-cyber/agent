@@ -49,11 +49,11 @@ ruff clean, docs updated, commit, summary, STOP.
 - [x] tests (fake runner; real Docker marked)
 - [x] `LocalRunner` (no isolation, dev only) via `SANDBOX_BACKEND=local`
 
-## Phase 7 – Agent loop & orchestration
-- [ ] tool-calling loop with step limit, tool error feedback, final summary
-- [ ] `delegate(agent, task)` tool for the orchestrator (depth limit)
-- [ ] fallback for models without native tool calling (JSON tool protocol in prompt)
-- [ ] tests with MockLLM scripts
+## Phase 7 – Agent loop & orchestration ✅
+- [x] tool-calling loop with step limit, tool error feedback, final summary
+- [x] `delegate(agent, task)` tool for the orchestrator (depth limit)
+- [x] fallback for models without native tool calling (JSON tool protocol in prompt)
+- [x] tests with MockLLM scripts
 
 ## Phase 8 – Approvals
 - [ ] risk classifier (git push, deploy, rm/delete, network writes)

@@ -73,20 +73,19 @@ async def chat_completions(
     llm = request.app.state.llm
     model = body.model or llm.config.default
     log.info("chat client=%s model=%s messages=%d", principal.label, model, len(body.messages))
-    messages, alias, temperature = body.messages, model, body.temperature
-    agent = request.app.state.agents.get(model)
-    if agent is not None:
-        messages = [{"role": "system", "content": agent.system_prompt}, *body.messages]
-        alias = agent.model
-        temperature = temperature if temperature is not None else agent.temperature
+    state = request.app.state
     try:
-        resp = await llm.chat(
-            messages,
-            model=alias,
-            tools=body.tools,
-            temperature=temperature,
-            max_tokens=body.max_tokens,
-        )
+        if state.agents.get(model) is not None:
+            result = await state.runner.run(model, body.messages, client=principal.label)
+            resp = result.as_response()
+        else:
+            resp = await llm.chat(
+                body.messages,
+                model=model,
+                tools=body.tools,
+                temperature=body.temperature,
+                max_tokens=body.max_tokens,
+            )
     except KeyError:
         return _error(404, f"model {model!r} not found", "invalid_request_error", "model_not_found")
     except LLMUnavailable as exc:
