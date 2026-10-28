@@ -74,10 +74,12 @@ async def chat_completions(
     model = body.model or llm.config.default
     log.info("chat client=%s model=%s messages=%d", principal.label, model, len(body.messages))
     state = request.app.state
+    interaction_id = None
     try:
         if state.agents.get(model) is not None:
             result = await state.runner.run(model, body.messages, client=principal.label)
             resp = result.as_response()
+            interaction_id = result.interaction_id
         else:
             resp = await llm.chat(
                 body.messages,
@@ -94,9 +96,15 @@ async def chat_completions(
         return _error(502, f"model backend error: {exc}", "server_error")
 
     cid, created = f"chatcmpl-{uuid.uuid4().hex[:24]}", int(time.time())
+    headers = {"X-Interaction-Id": str(interaction_id)} if interaction_id else None
     if body.stream:
-        return StreamingResponse(_sse(resp, model, cid, created), media_type="text/event-stream")
-    return JSONResponse(_completion_body(resp, model, cid, created))
+        return StreamingResponse(
+            _sse(resp, model, cid, created), media_type="text/event-stream", headers=headers
+        )
+    payload = _completion_body(resp, model, cid, created)
+    if interaction_id:
+        payload["interaction_id"] = interaction_id  # use with POST /v1/feedback
+    return JSONResponse(payload, headers=headers)
 
 
 @router.get("/models")

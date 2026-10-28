@@ -61,12 +61,14 @@ ruff clean, docs updated, commit, summary, STOP.
 - [x] tests
 - [x] answers accept TAK/NIE/yes/no/ja/nein; `APPROVAL_MODE=off` disables the gate
 
-## Phase 9 – Memory
-- [ ] SQLite: conversations, messages, ratings (`POST /v1/feedback`), lessons
-- [ ] `Embedder` protocol + Ollama embeddings (`nomic-embed-text`), pure-Python cosine search
-- [ ] RAG: relevant history + lessons injected into the agent context
-- [ ] self-reflection: after a task the agent writes a short lesson
-- [ ] tests
+## Phase 9 – Memory ✅
+- [x] SQLite: conversations, messages, ratings (`POST /v1/feedback`), lessons
+- [x] `Embedder` protocol + Ollama embeddings (`nomic-embed-text`), pure-Python cosine search
+- [x] RAG: relevant history + lessons injected into the agent context
+- [x] self-reflection: after a task the agent writes a short lesson
+- [x] tests
+- [x] owner rules (`POST /v1/admin/lessons`) always injected; low rating + comment → lesson
+- [x] `HashEmbedder` fallback (no model needed)
 
 ## Phase 10 – Learning (fine-tuning)
 - [ ] dataset builder: rated conversations → JSONL (chat format, min score, dedup)

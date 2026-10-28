@@ -13,6 +13,7 @@ from app.agent.loop import AgentRunner
 from app.agents.profiles import AgentRegistry
 from app.api.approvals_routes import router as approvals_router
 from app.api.keys import KeyStore
+from app.api.memory_routes import router as memory_router
 from app.api.routes import router as api_router
 from app.api.tasks_routes import router as tasks_router
 from app.approvals.gate import ApprovalGate
@@ -20,6 +21,9 @@ from app.config import Settings, get_settings
 from app.llm.base import LLMClient
 from app.llm.registry import ModelRegistry, load_config
 from app.logging import setup_logging
+from app.memory.embedder import Embedder, HashEmbedder, OpenAICompatEmbedder
+from app.memory.service import MemoryService
+from app.memory.store import MemoryStore
 from app.sandbox.runner import DockerSandbox, LocalRunner, SandboxRunner
 from app.tasks.store import Task, TaskStore
 from app.tasks.webhook import WebhookSender
@@ -47,6 +51,12 @@ def _make_sandbox(settings: Settings) -> SandboxRunner:
         timeout_s=settings.sandbox_timeout,
         max_output=settings.sandbox_max_output,
     )
+
+
+def _make_embedder(settings: Settings) -> Embedder:
+    if settings.memory_embedder == "hash":
+        return HashEmbedder()
+    return OpenAICompatEmbedder(settings.ollama_url.rstrip("/") + "/v1", settings.embed_model)
 
 
 def create_app(
@@ -85,6 +95,14 @@ def create_app(
         app.state.approvals = ApprovalGate(
             settings.approval_timeout, notify_approval, settings.approval_mode
         )
+        app.state.memory = MemoryService(
+            MemoryStore(settings.db_path),
+            _make_embedder(settings),
+            app.state.llm,
+            reflect=settings.memory_reflect,
+            top_k=settings.memory_top_k,
+            min_rating=settings.memory_min_rating,
+        )
         app.state.runner = AgentRunner(
             app.state.llm,
             app.state.agents,
@@ -92,6 +110,7 @@ def create_app(
             settings.workspaces_dir,
             http_allowlist=settings.http_allowlist_list,
             approver=app.state.approvals,
+            memory=app.state.memory,
         )
 
         async def run_task(task: Task) -> str:
@@ -117,6 +136,11 @@ def create_app(
         app.state.worker.start()
         yield
         await app.state.worker.stop()
+        await app.state.memory.drain()
+        app.state.memory.store.close()
+        embedder_close = getattr(app.state.memory.embedder, "aclose", None)
+        if embedder_close is not None:
+            await embedder_close()
         app.state.tasks.close()
         await app.state.webhooks.aclose()
         app.state.llm.usage.save(usage_path)
@@ -130,6 +154,7 @@ def create_app(
     app.include_router(api_router)
     app.include_router(tasks_router)
     app.include_router(approvals_router)
+    app.include_router(memory_router)
 
     @app.get("/health")
     async def health() -> dict[str, str]:

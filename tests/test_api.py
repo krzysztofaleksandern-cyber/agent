@@ -59,7 +59,12 @@ def client(tmp_path: Path, llm: MockLLM) -> Iterator[TestClient]:
     agents = tmp_path / "agents.yaml"
     agents.write_text(AGENTS_YAML)
     settings = Settings(
-        _env_file=None, data_dir=str(tmp_path), admin_api_key=ADMIN, agents_config=str(agents)
+        _env_file=None,
+        data_dir=str(tmp_path),
+        admin_api_key=ADMIN,
+        agents_config=str(agents),
+        memory_embedder="hash",
+        memory_reflect=False,
     )
     with TestClient(create_app(settings, llm=registry)) as c:
         yield c
@@ -235,3 +240,27 @@ def test_approvals_api(client: TestClient, key: str) -> None:
         client.post(f"/v1/approvals/{pid}", json={"approve": True}, headers=auth(ADMIN)).status_code
         == 404
     )
+
+
+def test_feedback_and_lessons(client: TestClient, key: str) -> None:
+    r = client.post("/v1/chat/completions", json={**MSG, "model": "helper"}, headers=auth(key))
+    iid = r.json()["interaction_id"]
+    assert r.headers["x-interaction-id"] == str(iid)
+    other = client.app.state.keys.create("other")[0]
+    fb = {"interaction_id": iid, "rating": 1, "comment": "Always answer in Polish."}
+    assert client.post("/v1/feedback", json=fb, headers=auth(other)).status_code == 404
+    assert client.post("/v1/feedback", json=fb, headers=auth(key)).status_code == 200
+    lessons = client.get("/v1/admin/lessons?agent=helper", headers=auth(ADMIN)).json()
+    assert lessons[0]["source"] == "feedback" and "Polish" in lessons[0]["text"]
+
+    r = client.post(
+        "/v1/admin/lessons", json={"agent": "helper", "text": "Be brief."}, headers=auth(ADMIN)
+    )
+    lesson_id = r.json()["id"]
+    client.post("/v1/chat/completions", json={**MSG, "model": "helper"}, headers=auth(key))
+    system = client.app.state.llm._clients["gpu"].calls[-1]["messages"][0]["content"]
+    assert "## Owner rules" in system and "Be brief." in system
+    assert client.delete(f"/v1/admin/lessons/{lesson_id}", headers=auth(ADMIN)).status_code == 200
+    assert client.delete(f"/v1/admin/lessons/{lesson_id}", headers=auth(ADMIN)).status_code == 404
+    bad = {"agent": "ghost", "text": "abc"}
+    assert client.post("/v1/admin/lessons", json=bad, headers=auth(ADMIN)).status_code == 404

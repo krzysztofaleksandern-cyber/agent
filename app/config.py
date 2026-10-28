@@ -46,6 +46,13 @@ class Settings(BaseSettings):
     approval_timeout: float = 600.0
     approval_webhook_url: str = ""
 
+    # Memory / learning from experience
+    memory_embedder: Literal["ollama", "hash"] = "ollama"
+    embed_model: str = "nomic-embed-text"
+    memory_reflect: bool = True
+    memory_top_k: int = 3
+    memory_min_rating: int = 4
+
     @property
     def http_allowlist_list(self) -> list[str]:
         return [d.strip().lower() for d in self.http_allowlist.split(",") if d.strip()]
