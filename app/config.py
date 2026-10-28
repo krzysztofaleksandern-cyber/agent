@@ -61,6 +61,10 @@ class Settings(BaseSettings):
     operator_worker_token: SecretStr = SecretStr("")
     operator_dispatch_timeout: float = 120.0
 
+    # Phone console (PWA): one-time-password login, then a short-lived session
+    console_otp_ttl: float = 300.0
+    console_session_ttl: float = 43200.0
+
     @property
     def http_allowlist_list(self) -> list[str]:
         return [d.strip().lower() for d in self.http_allowlist.split(",") if d.strip()]

@@ -94,7 +94,7 @@ ruff clean, docs updated, commit, summary, STOP.
 ## Part 2 – New agents (in progress)
 - [x] Phase 12: Gemini provider with 5-key rotation
 - [x] Phase 13: `operator` agent + host worker (control the owner's own computer)
-- [ ] Phase 14: phone PWA with one-time-password login (Chrome, no install)
+- [x] Phase 14: phone PWA with one-time-password login (Chrome, no install)
 
 (TTS skipped: owner already has a voice agent of their own.)
 
@@ -105,3 +105,10 @@ ruff clean, docs updated, commit, summary, STOP.
 - [x] `config/agents.yaml`: `operator` agent (Windows); risky os_* actions gated by approvals
 - [x] `worker/operator_worker.py` (Windows, pyautogui), requirements, README
 - [x] tests for hub, tools, risk classification, worker channel
+
+### Phase 14 details – phone console (PWA) ✅
+- [x] `ConsoleManager` (SQLite): single-use OTP + short-lived session tokens (hashed), shared with the CLI
+- [x] `python -m app.cli console-otp` prints a one-time login code
+- [x] `/console/` PWA (installable, dark, mobile): OTP login, send commands to the operator agent, live worker status, TAK/NIE approvals
+- [x] session-scoped API: command/status/approvals (not an admin key); logout
+- [x] tests for OTP lifecycle, CLI, and the full PWA flow

@@ -46,6 +46,7 @@ app/
   approvals/     Phase 8: risky-action gate via API, timeout = deny
   memory/        Phase 9: history, ratings, lessons, Embedder (Ollama embeddings), RAG
   operator/      Phase 13: command channel to the host worker controlling the owner's PC
+  console/       Phase 14: phone PWA (OTP login) to drive the operator agent + approvals
   learning/      Phase 10: dataset builder, LoRA training job, model versioning, eval, rollback
 config/          models.yaml, agents.yaml, eval.yaml
 training/        GPU-box fine-tuning (Unsloth QLoRA) + run_cycle.sh

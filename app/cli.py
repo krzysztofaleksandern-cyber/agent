@@ -22,6 +22,7 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="python -m app.cli")
     sub = parser.add_subparsers(dest="cmd", required=True)
     sub.add_parser("secret", help="print a random secret for .env")
+    sub.add_parser("console-otp", help="one-time login code for the phone console (PWA)")
     keys = sub.add_parser("keys", help="manage client API keys").add_subparsers(
         dest="action", required=True
     )
@@ -33,6 +34,20 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.cmd == "secret":
         print(generate_secret())
+        return 0
+
+    if args.cmd == "console-otp":
+        from app.console.manager import ConsoleManager
+
+        mgr = ConsoleManager(args.db or get_settings().db_path)
+        try:
+            otp, ttl = mgr.create_otp()
+        finally:
+            mgr.close()
+        print(otp)
+        print(
+            f"valid for {ttl // 60} min; open /console/ on your phone and enter it", file=sys.stderr
+        )
         return 0
 
     store = KeyStore(args.db or get_settings().db_path)

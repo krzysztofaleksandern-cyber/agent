@@ -12,6 +12,7 @@ from fastapi import FastAPI
 from app.agent.loop import AgentRunner
 from app.agents.profiles import AgentRegistry
 from app.api.approvals_routes import router as approvals_router
+from app.api.console_routes import router as console_router
 from app.api.keys import KeyStore
 from app.api.learning_routes import router as learning_router
 from app.api.memory_routes import router as memory_router
@@ -20,6 +21,7 @@ from app.api.routes import router as api_router
 from app.api.tasks_routes import router as tasks_router
 from app.approvals.gate import ApprovalGate
 from app.config import Settings, get_settings
+from app.console.manager import ConsoleManager
 from app.learning.evaluate import load_cases
 from app.learning.pipeline import LearningPipeline
 from app.learning.versions import VersionStore
@@ -123,6 +125,9 @@ def create_app(
         )
         app.state.learning.apply_active()
         app.state.operator = OperatorHub(dispatch_timeout=settings.operator_dispatch_timeout)
+        app.state.console = ConsoleManager(
+            settings.db_path, settings.console_otp_ttl, settings.console_session_ttl
+        )
         app.state.runner = AgentRunner(
             app.state.llm,
             app.state.agents,
@@ -166,6 +171,7 @@ def create_app(
         app.state.tasks.close()
         await app.state.webhooks.aclose()
         app.state.llm.usage.save(usage_path)
+        app.state.console.close()
         app.state.keys.close()
         if llm is None:
             await app.state.llm.aclose()
@@ -179,6 +185,7 @@ def create_app(
     app.include_router(memory_router)
     app.include_router(learning_router)
     app.include_router(operator_router)
+    app.include_router(console_router)
 
     @app.get("/health")
     async def health() -> dict[str, str]:

@@ -298,3 +298,23 @@ def test_operator_worker_channel(client: TestClient, key: str) -> None:
     # unknown result id is simply not accepted
     r = client.post("/v1/operator/result", json={"id": "x", "ok": True}, headers=wtok)
     assert r.json() == {"accepted": False}
+
+
+def test_console_pwa_flow(client: TestClient) -> None:
+    # static entrypoint is public
+    assert client.get("/console/").status_code == 200
+    assert client.get("/console/manifest.webmanifest").status_code == 200
+    # protected endpoints need a session
+    assert client.get("/console/api/status").status_code == 401
+    assert client.post("/console/api/login", json={"otp": "999999"}).status_code == 401
+    # real OTP -> session -> operator command + approvals reachable
+    otp, _ = client.app.state.console.create_otp()
+    tok = client.post("/console/api/login", json={"otp": otp}).json()["token"]
+    h = {"Authorization": "Bearer " + tok}
+    assert client.get("/console/api/status", headers=h).json()["online"] is False
+    r = client.post("/console/api/command", json={"text": "open notepad"}, headers=h)
+    assert r.status_code == 202 and r.json()["agent"] == "operator"
+    assert client.get("/console/api/approvals", headers=h).json() == []
+    # logout invalidates the session
+    assert client.post("/console/api/logout", headers=h).json() == {"ok": True}
+    assert client.get("/console/api/status", headers=h).status_code == 401
