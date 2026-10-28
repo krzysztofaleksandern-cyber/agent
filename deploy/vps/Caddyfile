@@ -1,0 +1,10 @@
+# Automatic HTTPS (Let's Encrypt) for the public API.
+{$DOMAIN} {
+	encode gzip
+	reverse_proxy app:8080
+	header {
+		Strict-Transport-Security "max-age=31536000"
+		X-Content-Type-Options nosniff
+		-Server
+	}
+}

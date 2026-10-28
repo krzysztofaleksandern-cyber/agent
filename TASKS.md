@@ -78,7 +78,12 @@ ruff clean, docs updated, commit, summary, STOP.
 - [x] tests (builder, versioning, eval logic); `train.py` not run here (needs GPU)
 - [x] `training/run_cycle.sh`: dataset → train → `ollama create` → evaluate/promote
 
-## Phase 11 – Deployment
-- [ ] `deploy/vps/docker-compose.yml` (app + sandbox image), `deploy/gpu/` (Ollama + training, Vast.ai onstart script)
-- [ ] WireGuard/Tailscale tunnel guide, systemd unit, backups of data volume
-- [ ] README: step-by-step setup, model choice per GPU (V100S 32 GB / RTX 3090 Ti 24 GB), security checklist
+## Phase 11 – Deployment ✅
+- [x] `deploy/vps/docker-compose.yml` (app + Caddy HTTPS, Docker socket for sandboxes, data at identical host/container path)
+- [x] `deploy/vps/start.sh`, `devagent.service` (systemd), `backup.sh` (SQLite backup)
+- [x] `deploy/gpu/onstart.sh` for Vast.ai (Tailscale userspace, Ollama on localhost, model pulls)
+- [x] Dockerfile ships the Docker CLI; root compose kept for local dev
+- [x] README: step-by-step setup, model choice per GPU (V100S 32 GB / RTX 3090 Ti 24 GB), API table, security checklist
+
+## Phase 12 – (optional, only on request) TTS voice replies
+- [ ] skipped: owner already has TTS in their own apps

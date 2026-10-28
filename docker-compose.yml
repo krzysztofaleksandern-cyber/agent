@@ -1,3 +1,4 @@
+# Local development stack (no HTTPS). Production: deploy/vps/docker-compose.yml
 services:
   app:
     build: .

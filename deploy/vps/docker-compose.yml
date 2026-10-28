@@ -1,0 +1,40 @@
+# Production stack on the VPS: API/agents + HTTPS reverse proxy.
+# Run from the repo root:  docker compose -f deploy/vps/docker-compose.yml up -d --build
+services:
+  app:
+    build:
+      context: ../..
+    env_file: ../../.env
+    environment:
+      # Host path == container path, so sandbox containers (started via the host
+      # Docker daemon) can bind-mount the same workspace directories.
+      DATA_DIR: /srv/devagent/data
+    volumes:
+      - /srv/devagent/data:/srv/devagent/data
+      - ../../config:/srv/config            # agents.yaml is edited via the admin API
+      - /var/run/docker.sock:/var/run/docker.sock
+    group_add:
+      - "${DOCKER_GID:-999}"                # getent group docker | cut -d: -f3
+    expose:
+      - "8080"
+    ports:
+      - "127.0.0.1:8080:8080"               # local access / SSH tunnel only
+    restart: unless-stopped
+
+  caddy:
+    image: caddy:2
+    depends_on: [app]
+    environment:
+      DOMAIN: ${DOMAIN:?set DOMAIN in .env (e.g. ai.stacklogic.pl)}
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    restart: unless-stopped
+
+volumes:
+  caddy-data:
+  caddy-config:

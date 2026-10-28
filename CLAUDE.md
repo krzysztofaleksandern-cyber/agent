@@ -46,7 +46,8 @@ app/
   approvals/     Phase 8: risky-action gate via API, timeout = deny
   memory/        Phase 9: history, ratings, lessons, Embedder (Ollama embeddings), RAG
   learning/      Phase 10: dataset builder, LoRA training job, model versioning, eval, rollback
-config/          models.yaml, agents.yaml
+config/          models.yaml, agents.yaml, eval.yaml
+training/        GPU-box fine-tuning (Unsloth QLoRA) + run_cycle.sh
 deploy/          Phase 11: compose for VPS and GPU, tunnel, systemd, security checklist
 tests/           pytest; no network, no real Docker/LLM by default
 ```
@@ -80,5 +81,6 @@ uv venv && uv pip install -e ".[dev]"     # or: pip install -e ".[dev]"
 pytest -q                                  # tests
 ruff check . && ruff format --check .      # lint
 uvicorn app.main:create_app --factory --reload   # dev server
-docker compose up --build                  # container run
+docker compose up --build                  # local container run
+./deploy/vps/start.sh                      # production stack on the VPS (see README)
 ```
