@@ -5,6 +5,7 @@ WORKDIR /srv
 
 COPY pyproject.toml ./
 COPY app ./app
+COPY config ./config
 RUN pip install --no-cache-dir . \
     && useradd --create-home --uid 1000 agent \
     && mkdir -p /srv/data && chown agent:agent /srv/data

@@ -1,8 +1,13 @@
 # devagent
 
-Private, autonomous coding agent (Python 3.12, FastAPI) controlled via WhatsApp.
-The LLM is pluggable: any OpenAI-compatible endpoint (e.g. vLLM). See `CLAUDE.md` for
-architecture and `TASKS.md` for the roadmap.
+Private, self-hosted AI agent platform (Python 3.12, FastAPI). Open-weight models run on
+your own GPU via Ollama (or vLLM); your apps connect through an OpenAI-compatible API.
+See `CLAUDE.md` for architecture and `TASKS.md` for the roadmap.
+
+## Models
+
+Backends and model aliases live in `config/models.yaml` (fallback chains supported).
+On the GPU box: `ollama pull qwen2.5-coder:14b` etc., then set `OLLAMA_URL` in `.env`.
 
 ## Quick start (dev)
 

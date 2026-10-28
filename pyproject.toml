@@ -1,17 +1,17 @@
 [project]
 name = "devagent"
 version = "0.1.0"
-description = "Private autonomous coding agent controlled via WhatsApp"
+description = "Private self-hosted AI agent platform with an OpenAI-compatible API"
 requires-python = ">=3.12"
 dependencies = [
     "fastapi>=0.115",
     "uvicorn[standard]>=0.30",
     "pydantic-settings>=2.4",
     "httpx>=0.27",
+    "pyyaml>=6.0",
 ]
 
 [project.optional-dependencies]
-stt = ["faster-whisper>=1.0"]
 dev = [
     "pytest>=8.0",
     "pytest-asyncio>=0.24",

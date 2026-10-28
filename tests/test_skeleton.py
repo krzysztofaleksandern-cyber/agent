@@ -9,12 +9,9 @@ from app.main import create_app
 
 
 def test_settings_from_env(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setenv("OWNER_PHONE", "48123456789")
-    monkeypatch.setenv("LLM_API_KEY", "sk-supersecretvalue123")
+    monkeypatch.setenv("OLLAMA_URL", "http://gpu:11434")
     s = Settings(_env_file=None)
-    assert s.owner_phone == "48123456789"
-    assert s.llm_api_key.get_secret_value() == "sk-supersecretvalue123"
-    assert "supersecret" not in repr(s)
+    assert s.ollama_url == "http://gpu:11434"
 
 
 @pytest.mark.parametrize(

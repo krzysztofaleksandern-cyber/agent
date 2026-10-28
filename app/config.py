@@ -3,7 +3,6 @@
 from functools import lru_cache
 from typing import Literal
 
-from pydantic import SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -14,17 +13,9 @@ class Settings(BaseSettings):
     log_level: str = "INFO"
     data_dir: str = "./data"
 
-    # WhatsApp Cloud API (used from Phase 2)
-    whatsapp_verify_token: SecretStr = SecretStr("")
-    whatsapp_app_secret: SecretStr = SecretStr("")
-    whatsapp_access_token: SecretStr = SecretStr("")
-    whatsapp_phone_number_id: str = ""
-    owner_phone: str = ""
-
-    # LLM (used from Phase 5)
-    llm_base_url: str = "http://localhost:8000/v1"
-    llm_model: str = "local-model"
-    llm_api_key: SecretStr = SecretStr("")
+    # Model layer
+    models_config: str = "config/models.yaml"
+    ollama_url: str = "http://localhost:11434"
 
 
 @lru_cache
