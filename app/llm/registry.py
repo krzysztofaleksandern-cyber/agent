@@ -5,7 +5,7 @@ import os
 import re
 import time
 from collections.abc import Callable, Mapping
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from pathlib import Path
 from typing import Any
 
@@ -175,6 +175,23 @@ class ModelRegistry:
             return resp
         assert last_exc is not None
         raise last_exc
+
+    def current_model(self, alias: str) -> str:
+        return self.config.models[alias].model
+
+    def set_model(self, alias: str, model: str) -> None:
+        """Point an alias at another backend model (e.g. a fine-tuned version), at runtime."""
+        if alias not in self.config.models:
+            raise KeyError(alias)
+        self.config.models[alias] = replace(self.config.models[alias], model=model)
+        log.info("alias %s now uses model %s", alias, model)
+
+    async def chat_direct(
+        self, alias: str, model: str, messages: list[ChatMessage], **kwargs: Any
+    ) -> LLMResponse:
+        """Call a specific backend model on the alias's backend, bypassing fallback."""
+        backend = self.config.models[alias].backend
+        return await self._clients[backend].chat(messages, model=model, **kwargs)
 
     async def aclose(self) -> None:
         for client in self._clients.values():

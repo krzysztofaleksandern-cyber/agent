@@ -53,6 +53,10 @@ class Settings(BaseSettings):
     memory_top_k: int = 3
     memory_min_rating: int = 4
 
+    # Learning: fine-tuned candidates must pass config/eval.yaml
+    eval_config: str = "config/eval.yaml"
+    learning_min_score: float = 0.5
+
     @property
     def http_allowlist_list(self) -> list[str]:
         return [d.strip().lower() for d in self.http_allowlist.split(",") if d.strip()]

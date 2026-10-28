@@ -1,0 +1,23 @@
+# Regression checks run before a fine-tuned model replaces the current one.
+# A candidate is promoted only if it scores >= LEARNING_MIN_SCORE and >= the current model.
+# Add cases that reflect YOUR real tasks - this is what protects you from a worse model.
+coder:
+  - prompt: "Write a Python function is_prime(n) that returns True for prime numbers. Only code."
+    expect_regex: "def is_prime\\s*\\("
+  - prompt: "What does `git status` show? Answer in one sentence."
+    expect_any: ["working", "staged", "changes", "branch"]
+  - prompt: "Napisz w Pythonie funkcję reverse(s), która odwraca napis. Tylko kod."
+    expect_regex: "def reverse\\s*\\("
+general:
+  - prompt: "What is the capital of Austria? Answer with one word."
+    expect_any: ["Vienna", "Wien"]
+  - prompt: "Jaka jest stolica Polski? Odpowiedz jednym słowem."
+    expect_any: ["Warszawa"]
+  - prompt: "Übersetze ins Englische: 'Guten Morgen'. Nur die Übersetzung."
+    expect_any: ["good morning"]
+coder-small:
+  - prompt: "Write a Python function add(a, b) returning the sum. Only code."
+    expect_regex: "def add\\s*\\("
+general-small:
+  - prompt: "What is 2+2? Answer with a number only."
+    expect_any: ["4"]

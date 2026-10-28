@@ -70,12 +70,13 @@ ruff clean, docs updated, commit, summary, STOP.
 - [x] owner rules (`POST /v1/admin/lessons`) always injected; low rating + comment → lesson
 - [x] `HashEmbedder` fallback (no model needed)
 
-## Phase 10 – Learning (fine-tuning)
-- [ ] dataset builder: rated conversations → JSONL (chat format, min score, dedup)
-- [ ] `training/` image + script: QLoRA via Unsloth (fp16 fallback for Volta), export GGUF/adapter
-- [ ] register new version in Ollama (`Modelfile` with ADAPTER), version table
-- [ ] eval suite (fixed prompts + checks) → promote or rollback
-- [ ] tests (builder, versioning, eval logic; training itself marked)
+## Phase 10 – Learning (fine-tuning) ✅
+- [x] dataset builder: rated conversations → JSONL (chat format, min score, dedup)
+- [x] `training/` image + script: QLoRA via Unsloth (fp16 fallback for Volta), export GGUF/adapter
+- [x] register new version in Ollama (`Modelfile` with ADAPTER), version table
+- [x] eval suite (fixed prompts + checks) → promote or rollback
+- [x] tests (builder, versioning, eval logic); `train.py` not run here (needs GPU)
+- [x] `training/run_cycle.sh`: dataset → train → `ollama create` → evaluate/promote
 
 ## Phase 11 – Deployment
 - [ ] `deploy/vps/docker-compose.yml` (app + sandbox image), `deploy/gpu/` (Ollama + training, Vast.ai onstart script)

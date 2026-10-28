@@ -264,3 +264,22 @@ def test_feedback_and_lessons(client: TestClient, key: str) -> None:
     assert client.delete(f"/v1/admin/lessons/{lesson_id}", headers=auth(ADMIN)).status_code == 404
     bad = {"agent": "ghost", "text": "abc"}
     assert client.post("/v1/admin/lessons", json=bad, headers=auth(ADMIN)).status_code == 404
+
+
+def test_learning_api(client: TestClient, key: str) -> None:
+    r = client.post("/v1/chat/completions", json={**MSG, "model": "helper"}, headers=auth(key))
+    client.post(
+        "/v1/feedback",
+        json={"interaction_id": r.json()["interaction_id"], "rating": 5},
+        headers=auth(key),
+    )
+    assert client.get("/v1/admin/dataset", headers=auth(key)).status_code == 403
+    lines = client.get("/v1/admin/dataset", headers=auth(ADMIN)).text.strip().splitlines()
+    assert json.loads(lines[0])["messages"][-1] == {"role": "assistant", "content": "hello"}
+    r = client.post(
+        "/v1/admin/candidates", json={"alias": "nope", "model": "x"}, headers=auth(ADMIN)
+    )
+    assert r.status_code == 404
+    assert client.get("/v1/admin/versions", headers=auth(ADMIN)).json() == []
+    r = client.post("/v1/admin/versions/general/rollback", headers=auth(ADMIN))
+    assert r.json() == {"alias": "general", "model": "qwen"}

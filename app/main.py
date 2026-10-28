@@ -13,11 +13,15 @@ from app.agent.loop import AgentRunner
 from app.agents.profiles import AgentRegistry
 from app.api.approvals_routes import router as approvals_router
 from app.api.keys import KeyStore
+from app.api.learning_routes import router as learning_router
 from app.api.memory_routes import router as memory_router
 from app.api.routes import router as api_router
 from app.api.tasks_routes import router as tasks_router
 from app.approvals.gate import ApprovalGate
 from app.config import Settings, get_settings
+from app.learning.evaluate import load_cases
+from app.learning.pipeline import LearningPipeline
+from app.learning.versions import VersionStore
 from app.llm.base import LLMClient
 from app.llm.registry import ModelRegistry, load_config
 from app.logging import setup_logging
@@ -57,6 +61,10 @@ def _make_embedder(settings: Settings) -> Embedder:
     if settings.memory_embedder == "hash":
         return HashEmbedder()
     return OpenAICompatEmbedder(settings.ollama_url.rstrip("/") + "/v1", settings.embed_model)
+
+
+def _load_eval_cases(path: str) -> dict:
+    return load_cases(path) if Path(path).exists() else {}
 
 
 def create_app(
@@ -103,6 +111,15 @@ def create_app(
             top_k=settings.memory_top_k,
             min_rating=settings.memory_min_rating,
         )
+        app.state.learning = LearningPipeline(
+            app.state.llm,
+            VersionStore(settings.db_path),
+            app.state.memory.store,
+            app.state.agents,
+            _load_eval_cases(settings.eval_config),
+            min_score=settings.learning_min_score,
+        )
+        app.state.learning.apply_active()
         app.state.runner = AgentRunner(
             app.state.llm,
             app.state.agents,
@@ -138,6 +155,7 @@ def create_app(
         await app.state.worker.stop()
         await app.state.memory.drain()
         app.state.memory.store.close()
+        app.state.learning.versions.close()
         embedder_close = getattr(app.state.memory.embedder, "aclose", None)
         if embedder_close is not None:
             await embedder_close()
@@ -155,6 +173,7 @@ def create_app(
     app.include_router(tasks_router)
     app.include_router(approvals_router)
     app.include_router(memory_router)
+    app.include_router(learning_router)
 
     @app.get("/health")
     async def health() -> dict[str, str]:
