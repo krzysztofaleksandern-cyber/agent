@@ -29,11 +29,11 @@ ruff clean, docs updated, commit, summary, STOP.
 - [x] tests
 - [x] `GET /v1/admin/usage` (admin key)
 
-## Phase 4 – Agent profiles
-- [ ] `config/agents.yaml`: name, description, system prompt, model alias, tools, temperature, max_steps
-- [ ] starter agents: `orchestrator`, `codex`, `writer`, `auditor`
-- [ ] admin endpoints: list/get/update agents (admin key)
-- [ ] tests
+## Phase 4 – Agent profiles ✅
+- [x] `config/agents.yaml`: name, description, system prompt, model alias, tools, temperature, max_steps
+- [x] starter agents: `orchestrator`, `codex`, `writer`, `auditor`
+- [x] admin endpoints: list/get/update agents (admin key)
+- [x] tests
 
 ## Phase 5 – Tasks & persistence
 - [ ] SQLite tasks (queued → running → done | failed | cancelled), attempts, result, error

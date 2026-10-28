@@ -17,6 +17,7 @@ class Settings(BaseSettings):
 
     # Model layer
     models_config: str = "config/models.yaml"
+    agents_config: str = "config/agents.yaml"
     ollama_url: str = "http://localhost:11434"
 
     # Public API: admin key (generate with `python -m app.cli secret`)

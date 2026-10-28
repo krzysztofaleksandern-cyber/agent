@@ -33,6 +33,7 @@ python -m app.cli keys revoke <id>
 
 ```python
 from openai import OpenAI
+
 client = OpenAI(base_url="http://<server>:8080/v1", api_key="sk-dev-...")
 client.chat.completions.create(model="coder", messages=[{"role": "user", "content": "Hi"}])
 ```

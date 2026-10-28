@@ -23,6 +23,15 @@ models:
 """
 
 
+AGENTS_YAML = """
+agents:
+  helper:
+    model: general
+    system_prompt: You help.
+    temperature: 0.5
+"""
+
+
 def test_keystore_lifecycle(tmp_path: Path) -> None:
     store = KeyStore(tmp_path / "k.db")
     key, rec = store.create("bot")
@@ -47,7 +56,11 @@ def client(tmp_path: Path, llm: MockLLM) -> Iterator[TestClient]:
     cfg = tmp_path / "models.yaml"
     cfg.write_text(YAML)
     registry = ModelRegistry(load_config(cfg, {}), env={}, client_factory=lambda b, k: llm)
-    settings = Settings(_env_file=None, data_dir=str(tmp_path), admin_api_key=ADMIN)
+    agents = tmp_path / "agents.yaml"
+    agents.write_text(AGENTS_YAML)
+    settings = Settings(
+        _env_file=None, data_dir=str(tmp_path), admin_api_key=ADMIN, agents_config=str(agents)
+    )
     with TestClient(create_app(settings, llm=registry)) as c:
         yield c
 
@@ -120,7 +133,7 @@ def test_errors(client: TestClient, key: str, llm: MockLLM) -> None:
 
 def test_models_and_admin_usage(client: TestClient, key: str) -> None:
     ids = [m["id"] for m in client.get("/v1/models", headers=auth(key)).json()["data"]]
-    assert ids == ["general", "coder"]
+    assert ids == ["helper", "general", "coder"]
     assert client.get("/v1/admin/usage", headers=auth(key)).status_code == 403
     client.post("/v1/chat/completions", json=MSG, headers=auth(key))
     usage = client.get("/v1/admin/usage", headers=auth(ADMIN)).json()
@@ -138,3 +151,27 @@ def test_cli(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
     assert "my-bot" in capsys.readouterr().out
     assert cli.main(["--db", db, "keys", "revoke", "1"]) == 0
     assert cli.main(["--db", db, "keys", "revoke", "1"]) == 1
+
+
+def test_chat_with_agent_profile(client: TestClient, key: str, llm: MockLLM) -> None:
+    r = client.post("/v1/chat/completions", json={**MSG, "model": "helper"}, headers=auth(key))
+    assert r.status_code == 200 and r.json()["model"] == "helper"
+    call = llm.calls[-1]
+    assert call["messages"][0] == {"role": "system", "content": "You help."}
+    assert call["model"] == "qwen" and call["temperature"] == 0.5
+
+
+def test_admin_agents(client: TestClient, key: str, tmp_path: Path) -> None:
+    assert client.get("/v1/admin/agents", headers=auth(key)).status_code == 403
+    assert "helper" in client.get("/v1/admin/agents", headers=auth(ADMIN)).json()
+    r = client.put("/v1/admin/agents/helper", json={"system_prompt": "New."}, headers=auth(ADMIN))
+    assert r.json()["helper"]["system_prompt"] == "New."
+    assert "New." in (tmp_path / "agents.yaml").read_text()
+    r = client.put(
+        "/v1/admin/agents/bot", json={"model": "coder", "system_prompt": "x"}, headers=auth(ADMIN)
+    )
+    assert r.status_code == 200
+    r = client.put("/v1/admin/agents/helper", json={"model": "nope"}, headers=auth(ADMIN))
+    assert r.status_code == 400
+    r = client.put("/v1/admin/agents/new", json={"model": "coder"}, headers=auth(ADMIN))
+    assert r.status_code == 400  # missing system_prompt

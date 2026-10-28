@@ -73,12 +73,18 @@ async def chat_completions(
     llm = request.app.state.llm
     model = body.model or llm.config.default
     log.info("chat client=%s model=%s messages=%d", principal.label, model, len(body.messages))
+    messages, alias, temperature = body.messages, model, body.temperature
+    agent = request.app.state.agents.get(model)
+    if agent is not None:
+        messages = [{"role": "system", "content": agent.system_prompt}, *body.messages]
+        alias = agent.model
+        temperature = temperature if temperature is not None else agent.temperature
     try:
         resp = await llm.chat(
-            body.messages,
-            model=model,
+            messages,
+            model=alias,
             tools=body.tools,
-            temperature=body.temperature,
+            temperature=temperature,
             max_tokens=body.max_tokens,
         )
     except KeyError:
@@ -96,15 +102,46 @@ async def chat_completions(
 
 @router.get("/models")
 async def list_models(request: Request, _: Principal = Depends(require_api_key)) -> dict[str, Any]:
-    return {
-        "object": "list",
-        "data": [
-            {"id": alias, "object": "model", "owned_by": "devagent"}
-            for alias in request.app.state.llm.aliases()
-        ],
-    }
+    agents = [
+        {"id": a.name, "object": "model", "owned_by": "agent", "description": a.description}
+        for a in request.app.state.agents.all()
+    ]
+    models = [
+        {"id": alias, "object": "model", "owned_by": "model"}
+        for alias in request.app.state.llm.aliases()
+    ]
+    return {"object": "list", "data": agents + models}
 
 
 @router.get("/admin/usage")
 async def usage(request: Request, _: Principal = Depends(require_admin)) -> dict[str, Any]:
     return request.app.state.llm.usage.snapshot()
+
+
+class AgentUpdate(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    model: str | None = None
+    system_prompt: str | None = None
+    description: str | None = None
+    tools: list[str] | None = None
+    temperature: float | None = None
+    max_steps: int | None = None
+    delegates: list[str] | None = None
+    native_tools: bool | None = None
+
+
+@router.get("/admin/agents")
+async def list_agents(request: Request, _: Principal = Depends(require_admin)) -> dict[str, Any]:
+    return {a.name: a.to_dict() for a in request.app.state.agents.all()}
+
+
+@router.put("/admin/agents/{name}", response_model=None)
+async def upsert_agent(
+    name: str, body: AgentUpdate, request: Request, _: Principal = Depends(require_admin)
+) -> dict[str, Any] | JSONResponse:
+    try:
+        profile = request.app.state.agents.upsert(name, body.model_dump(exclude_none=True))
+    except (TypeError, ValueError) as exc:
+        return _error(400, str(exc), "invalid_request_error")
+    return {name: profile.to_dict()}

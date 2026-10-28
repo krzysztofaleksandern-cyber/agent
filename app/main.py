@@ -8,6 +8,7 @@ from importlib.metadata import PackageNotFoundError, version
 
 from fastapi import FastAPI
 
+from app.agents.profiles import AgentRegistry
 from app.api.keys import KeyStore
 from app.api.routes import router as api_router
 from app.config import Settings, get_settings
@@ -38,6 +39,7 @@ def create_app(settings: Settings | None = None, llm: LLMClient | None = None) -
             app.state.llm = ModelRegistry(load_config(settings.models_config, env), env)
         else:
             app.state.llm = llm
+        app.state.agents = AgentRegistry(settings.agents_config, app.state.llm.aliases())
         app.state.keys = KeyStore(settings.db_path)
         if not settings.admin_api_key.get_secret_value():
             log.warning("ADMIN_API_KEY is not set; admin endpoints are disabled")
