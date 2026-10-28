@@ -201,3 +201,37 @@ def test_tasks_api(client: TestClient, key: str) -> None:
     assert client.post("/v1/tasks", json=bad, headers=auth(key)).status_code == 404
     both = {"agent": "helper", "input": "x", "messages": [{"role": "user", "content": "y"}]}
     assert client.post("/v1/tasks", json=both, headers=auth(key)).status_code == 422
+
+
+def test_approvals_api(client: TestClient, key: str) -> None:
+    import threading
+
+    gate = client.app.state.approvals
+    gate.timeout_s = 5
+    result = {}
+    loop = client.portal  # run review inside the app's event loop
+
+    def ask() -> None:
+        result["v"] = loop.call(gate.review, "git", {"args": ["push"]}, "test-app")
+
+    thread = threading.Thread(target=ask)
+    thread.start()
+    for _ in range(200):
+        pending = client.get("/v1/approvals", headers=auth(ADMIN)).json()
+        if pending:
+            break
+        threading.Event().wait(0.01)
+    assert client.get("/v1/approvals", headers=auth(key)).status_code == 403
+    pid = pending[0]["id"]
+    assert (
+        client.post(f"/v1/approvals/{pid}", json={"answer": "hmm"}, headers=auth(ADMIN)).status_code
+        == 422
+    )
+    r = client.post(f"/v1/approvals/{pid}", json={"answer": "TAK"}, headers=auth(ADMIN))
+    assert r.json() == {"id": pid, "approved": True}
+    thread.join(5)
+    assert result["v"] is None
+    assert (
+        client.post(f"/v1/approvals/{pid}", json={"approve": True}, headers=auth(ADMIN)).status_code
+        == 404
+    )

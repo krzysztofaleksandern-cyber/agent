@@ -55,10 +55,11 @@ ruff clean, docs updated, commit, summary, STOP.
 - [x] fallback for models without native tool calling (JSON tool protocol in prompt)
 - [x] tests with MockLLM scripts
 
-## Phase 8 – Approvals
-- [ ] risk classifier (git push, deploy, rm/delete, network writes)
-- [ ] pending approvals: `GET /v1/approvals`, `POST /v1/approvals/{id}` (yes/no), webhook notification; timeout = deny
-- [ ] tests
+## Phase 8 – Approvals ✅
+- [x] risk classifier (git push, deploy, rm/delete, network writes)
+- [x] pending approvals: `GET /v1/approvals`, `POST /v1/approvals/{id}` (yes/no), webhook notification; timeout = deny
+- [x] tests
+- [x] answers accept TAK/NIE/yes/no/ja/nein; `APPROVAL_MODE=off` disables the gate
 
 ## Phase 9 – Memory
 - [ ] SQLite: conversations, messages, ratings (`POST /v1/feedback`), lessons

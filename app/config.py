@@ -41,6 +41,11 @@ class Settings(BaseSettings):
         "stacklogic.pl,nexum-holding.at,nexum-holding.pl,pypi.org,docs.python.org,github.com"
     )
 
+    # Approvals: risky tool calls wait for the owner (timeout = deny)
+    approval_mode: Literal["risky", "off"] = "risky"
+    approval_timeout: float = 600.0
+    approval_webhook_url: str = ""
+
     @property
     def http_allowlist_list(self) -> list[str]:
         return [d.strip().lower() for d in self.http_allowlist.split(",") if d.strip()]

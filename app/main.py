@@ -11,9 +11,11 @@ from fastapi import FastAPI
 
 from app.agent.loop import AgentRunner
 from app.agents.profiles import AgentRegistry
+from app.api.approvals_routes import router as approvals_router
 from app.api.keys import KeyStore
 from app.api.routes import router as api_router
 from app.api.tasks_routes import router as tasks_router
+from app.approvals.gate import ApprovalGate
 from app.config import Settings, get_settings
 from app.llm.base import LLMClient
 from app.llm.registry import ModelRegistry, load_config
@@ -73,12 +75,23 @@ def create_app(
         app.state.llm.usage.load(usage_path)
         app.state.webhooks = WebhookSender(settings.webhook_secret.get_secret_value())
         app.state.tasks = TaskStore(settings.db_path)
+
+        async def notify_approval(payload: dict) -> None:
+            if settings.approval_webhook_url:
+                await app.state.webhooks.send(
+                    settings.approval_webhook_url, "approval.requested", payload
+                )
+
+        app.state.approvals = ApprovalGate(
+            settings.approval_timeout, notify_approval, settings.approval_mode
+        )
         app.state.runner = AgentRunner(
             app.state.llm,
             app.state.agents,
             sandbox or _make_sandbox(settings),
             settings.workspaces_dir,
             http_allowlist=settings.http_allowlist_list,
+            approver=app.state.approvals,
         )
 
         async def run_task(task: Task) -> str:
@@ -116,6 +129,7 @@ def create_app(
     app.state.settings = settings
     app.include_router(api_router)
     app.include_router(tasks_router)
+    app.include_router(approvals_router)
 
     @app.get("/health")
     async def health() -> dict[str, str]:
