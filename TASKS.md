@@ -42,11 +42,12 @@ ruff clean, docs updated, commit, summary, STOP.
 - [x] persist usage counters
 - [x] tests
 
-## Phase 6 – Tools & sandbox
-- [ ] `Dockerfile.sandbox` (python:3.12-slim + git, pytest, ruff, node)
-- [ ] `DockerSandbox`: `--network none`, CPU/RAM/PID limits, timeout, output truncation, per-task /workspace volume
-- [ ] tools: `shell`, `read_file`, `write_file`, `list_dir`, `git`, `http_get` (domain allowlist); path jail
-- [ ] tests (fake runner; real Docker marked)
+## Phase 6 – Tools & sandbox ✅
+- [x] `Dockerfile.sandbox` (python:3.12-slim + git, ssh, pytest, ruff, node)
+- [x] `DockerSandbox`: `--network none`, CPU/RAM/PID limits, timeout, output truncation, per-task /workspace volume
+- [x] tools: `shell`, `read_file`, `write_file`, `list_dir`, `git`, `http_get` (domain allowlist); path jail
+- [x] tests (fake runner; real Docker marked)
+- [x] `LocalRunner` (no isolation, dev only) via `SANDBOX_BACKEND=local`
 
 ## Phase 7 – Agent loop & orchestration
 - [ ] tool-calling loop with step limit, tool error feedback, final summary
