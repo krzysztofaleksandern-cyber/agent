@@ -8,6 +8,12 @@ backends:
   gpu:
     base_url: ${OLLAMA_URL}/v1
     timeout: 300
+  # Google Gemini via its OpenAI-compatible endpoint. Put your keys (comma-separated,
+  # free-tier keys are fine) in GEMINI_API_KEYS in .env; requests rotate across them.
+  gemini:
+    base_url: https://generativelanguage.googleapis.com/v1beta/openai
+    keys_env: GEMINI_API_KEYS
+    timeout: 120
   # Second Ollama/vLLM box, if you ever add one:
   # gpu2:
   #   base_url: http://10.0.0.3:8000/v1
@@ -34,3 +40,13 @@ models:
     backend: gpu
     model: llama3.1:8b
     temperature: 0.7
+  # Gemini aliases (point an agent's `model` here, or add as a fallback above).
+  gemini-pro:
+    backend: gemini
+    model: gemini-2.5-pro
+    temperature: 0.4
+    fallback: [gemini-flash]
+  gemini-flash:
+    backend: gemini
+    model: gemini-2.5-flash
+    temperature: 0.4

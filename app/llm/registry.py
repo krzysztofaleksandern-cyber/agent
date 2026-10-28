@@ -13,6 +13,7 @@ import yaml
 
 from app.llm.base import LLMClient
 from app.llm.openai_compat import OpenAICompatClient
+from app.llm.rotating import RotatingKeyClient
 from app.llm.types import ChatMessage, LLMResponse, LLMUnavailable, ToolSchema
 from app.llm.usage import UsageMeter
 
@@ -24,6 +25,7 @@ class BackendConfig:
     name: str
     base_url: str
     api_key_env: str = ""
+    keys_env: str = ""  # env var holding comma-separated keys -> rotate across them
     timeout: float = 120.0
 
 
@@ -54,6 +56,7 @@ def load_config(path: str | Path, env: Mapping[str, str] | None = None) -> Regis
             name=name,
             base_url=_expand(b["base_url"], env),
             api_key_env=b.get("api_key_env", ""),
+            keys_env=b.get("keys_env", ""),
             timeout=float(b.get("timeout", 120.0)),
         )
     models = {
@@ -118,9 +121,22 @@ class ModelRegistry:
         self.config = config
         self.usage = usage or UsageMeter()
         self._clients: dict[str, LLMClient] = {
-            name: client_factory(b, env.get(b.api_key_env, "") if b.api_key_env else "")
-            for name, b in config.backends.items()
+            name: self._build_client(b, env, client_factory) for name, b in config.backends.items()
         }
+
+    @staticmethod
+    def _build_client(
+        backend: BackendConfig, env: Mapping[str, str], factory: ClientFactory
+    ) -> LLMClient:
+        if backend.keys_env:
+            keys = [k.strip() for k in env.get(backend.keys_env, "").split(",") if k.strip()]
+            if keys:
+                return RotatingKeyClient([factory(backend, k) for k in keys])
+            log.warning(
+                "backend %s: %s is empty; no keys to rotate", backend.name, backend.keys_env
+            )
+        api_key = env.get(backend.api_key_env, "") if backend.api_key_env else ""
+        return factory(backend, api_key)
 
     def aliases(self) -> list[str]:
         return list(self.config.models)

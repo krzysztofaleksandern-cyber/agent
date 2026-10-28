@@ -85,5 +85,15 @@ ruff clean, docs updated, commit, summary, STOP.
 - [x] Dockerfile ships the Docker CLI; root compose kept for local dev
 - [x] README: step-by-step setup, model choice per GPU (V100S 32 GB / RTX 3090 Ti 24 GB), API table, security checklist
 
-## Phase 12 – (optional, only on request) TTS voice replies
-- [ ] skipped: owner already has TTS in their own apps
+## Phase 12 – Gemini provider with key rotation ✅
+- [x] `RotatingKeyClient`: round-robins over several API keys, cooldown on 429/5xx
+- [x] backend `keys_env` (comma-separated keys) wired into `ModelRegistry`
+- [x] `config/models.yaml`: gemini backend + `gemini-pro`/`gemini-flash` aliases
+- [x] `GEMINI_API_KEYS` in `.env.example`; tests for rotation and exhaustion
+
+## Part 2 – New agents (in progress)
+- [x] Phase 12: Gemini provider with 5-key rotation
+- [ ] Phase 13: `operator` agent + host worker (control the owner's own computer)
+- [ ] Phase 14: phone PWA with one-time-password login (Chrome, no install)
+
+(TTS skipped: owner already has a voice agent of their own.)
