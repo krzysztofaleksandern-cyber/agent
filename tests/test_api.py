@@ -175,3 +175,29 @@ def test_admin_agents(client: TestClient, key: str, tmp_path: Path) -> None:
     assert r.status_code == 400
     r = client.put("/v1/admin/agents/new", json={"model": "coder"}, headers=auth(ADMIN))
     assert r.status_code == 400  # missing system_prompt
+
+
+def test_tasks_api(client: TestClient, key: str) -> None:
+    import time
+
+    r = client.post("/v1/tasks", json={"agent": "helper", "input": "hi"}, headers=auth(key))
+    assert r.status_code == 202
+    task_id = r.json()["id"]
+    for _ in range(300):
+        task = client.get(f"/v1/tasks/{task_id}", headers=auth(key)).json()
+        if task["status"] == "done":
+            break
+        time.sleep(0.01)
+    assert task["status"] == "done" and task["result"] == "hello"
+    assert [t["id"] for t in client.get("/v1/tasks", headers=auth(key)).json()] == [task_id]
+
+    other = client.app.state.keys.create("other")[0]
+    assert client.get(f"/v1/tasks/{task_id}", headers=auth(other)).status_code == 404
+    assert client.get(f"/v1/tasks/{task_id}", headers=auth(ADMIN)).status_code == 200
+    r = client.post(f"/v1/tasks/{task_id}/cancel", headers=auth(key))
+    assert r.json()["cancelled"] is False
+
+    bad = {"agent": "nope", "input": "x"}
+    assert client.post("/v1/tasks", json=bad, headers=auth(key)).status_code == 404
+    both = {"agent": "helper", "input": "x", "messages": [{"role": "user", "content": "y"}]}
+    assert client.post("/v1/tasks", json=both, headers=auth(key)).status_code == 422

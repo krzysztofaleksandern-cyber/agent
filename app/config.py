@@ -23,6 +23,12 @@ class Settings(BaseSettings):
     # Public API: admin key (generate with `python -m app.cli secret`)
     admin_api_key: SecretStr = SecretStr("")
 
+    # Background tasks
+    webhook_secret: SecretStr = SecretStr("")
+    worker_concurrency: int = 1
+    task_max_attempts: int = 3
+    task_retry_backoff: float = 5.0
+
     @property
     def db_path(self) -> str:
         return str(Path(self.data_dir) / "devagent.db")

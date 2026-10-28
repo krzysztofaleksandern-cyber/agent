@@ -1,6 +1,8 @@
-"""In-memory usage counters per model alias (persisted from Phase 5)."""
+"""Usage counters per model alias, persisted as JSON between restarts."""
 
+import json
 from dataclasses import asdict, dataclass
+from pathlib import Path
 
 
 @dataclass
@@ -31,3 +33,13 @@ class UsageMeter:
 
     def snapshot(self) -> dict[str, dict[str, float]]:
         return {alias: asdict(u) for alias, u in self._data.items()}
+
+    def save(self, path: str | Path) -> None:
+        Path(path).parent.mkdir(parents=True, exist_ok=True)
+        Path(path).write_text(json.dumps(self.snapshot()))
+
+    def load(self, path: str | Path) -> None:
+        p = Path(path)
+        if p.exists():
+            raw = json.loads(p.read_text())
+            self._data = {alias: AliasUsage(**vals) for alias, vals in raw.items()}

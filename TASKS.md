@@ -35,12 +35,12 @@ ruff clean, docs updated, commit, summary, STOP.
 - [x] admin endpoints: list/get/update agents (admin key)
 - [x] tests
 
-## Phase 5 – Tasks & persistence
-- [ ] SQLite tasks (queued → running → done | failed | cancelled), attempts, result, error
-- [ ] asyncio worker, retry with backoff, cancel, restart recovery
-- [ ] `POST /v1/tasks`, `GET /v1/tasks/{id}`, `POST /v1/tasks/{id}/cancel`, webhook on completion (HMAC-signed)
-- [ ] persist usage counters
-- [ ] tests
+## Phase 5 – Tasks & persistence ✅
+- [x] SQLite tasks (queued → running → done | failed | cancelled), attempts, result, error
+- [x] asyncio worker, retry with backoff, cancel, restart recovery
+- [x] `POST /v1/tasks`, `GET /v1/tasks/{id}`, `POST /v1/tasks/{id}/cancel`, webhook on completion (HMAC-signed)
+- [x] persist usage counters
+- [x] tests
 
 ## Phase 6 – Tools & sandbox
 - [ ] `Dockerfile.sandbox` (python:3.12-slim + git, pytest, ruff, node)
