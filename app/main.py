@@ -15,6 +15,7 @@ from app.api.approvals_routes import router as approvals_router
 from app.api.keys import KeyStore
 from app.api.learning_routes import router as learning_router
 from app.api.memory_routes import router as memory_router
+from app.api.operator_routes import router as operator_router
 from app.api.routes import router as api_router
 from app.api.tasks_routes import router as tasks_router
 from app.approvals.gate import ApprovalGate
@@ -28,6 +29,7 @@ from app.logging import setup_logging
 from app.memory.embedder import Embedder, HashEmbedder, OpenAICompatEmbedder
 from app.memory.service import MemoryService
 from app.memory.store import MemoryStore
+from app.operator.hub import OperatorHub
 from app.sandbox.runner import DockerSandbox, LocalRunner, SandboxRunner
 from app.tasks.store import Task, TaskStore
 from app.tasks.webhook import WebhookSender
@@ -120,6 +122,7 @@ def create_app(
             min_score=settings.learning_min_score,
         )
         app.state.learning.apply_active()
+        app.state.operator = OperatorHub(dispatch_timeout=settings.operator_dispatch_timeout)
         app.state.runner = AgentRunner(
             app.state.llm,
             app.state.agents,
@@ -128,6 +131,7 @@ def create_app(
             http_allowlist=settings.http_allowlist_list,
             approver=app.state.approvals,
             memory=app.state.memory,
+            operator_hub=app.state.operator,
         )
 
         async def run_task(task: Task) -> str:
@@ -174,6 +178,7 @@ def create_app(
     app.include_router(approvals_router)
     app.include_router(memory_router)
     app.include_router(learning_router)
+    app.include_router(operator_router)
 
     @app.get("/health")
     async def health() -> dict[str, str]:

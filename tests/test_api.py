@@ -283,3 +283,18 @@ def test_learning_api(client: TestClient, key: str) -> None:
     assert client.get("/v1/admin/versions", headers=auth(ADMIN)).json() == []
     r = client.post("/v1/admin/versions/general/rollback", headers=auth(ADMIN))
     assert r.json() == {"alias": "general", "model": "qwen"}
+
+
+def test_operator_worker_channel(client: TestClient, key: str) -> None:
+    # worker auth: dedicated token, not a client key
+    client.app.state.settings.operator_worker_token = __import__("pydantic").SecretStr("worker-tok")
+    wtok = {"Authorization": "Bearer worker-tok"}
+    assert client.post("/v1/operator/poll", headers=auth(key)).status_code == 401
+    assert client.post("/v1/operator/poll", headers=wtok).json() == {"command": None}
+    # status is admin-only and reports the worker came by
+    st = client.get("/v1/operator/status", headers=auth(ADMIN)).json()
+    assert st["online"] is True
+    assert client.get("/v1/operator/status", headers=auth(key)).status_code == 403
+    # unknown result id is simply not accepted
+    r = client.post("/v1/operator/result", json={"id": "x", "ok": True}, headers=wtok)
+    assert r.json() == {"accepted": False}

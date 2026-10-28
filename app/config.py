@@ -57,6 +57,10 @@ class Settings(BaseSettings):
     eval_config: str = "config/eval.yaml"
     learning_min_score: float = 0.5
 
+    # Operator: host worker controlling the owner's own computer
+    operator_worker_token: SecretStr = SecretStr("")
+    operator_dispatch_timeout: float = 120.0
+
     @property
     def http_allowlist_list(self) -> list[str]:
         return [d.strip().lower() for d in self.http_allowlist.split(",") if d.strip()]

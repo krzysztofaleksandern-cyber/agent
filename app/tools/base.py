@@ -28,6 +28,7 @@ class ToolContext:
     approve: ApproveFn | None = None
     delegate: DelegateFn | None = None
     delegates: list[str] = field(default_factory=list)
+    operator_hub: Any = None  # OperatorHub, set for the operator agent only
 
 
 Handler = Callable[[dict[str, Any], ToolContext], Awaitable[str]]

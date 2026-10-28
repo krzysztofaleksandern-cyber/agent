@@ -197,5 +197,12 @@ TOOLS: dict[str, Tool] = {
 }
 
 
+def _all_tools() -> dict[str, Tool]:
+    from app.operator.tools import OPERATOR_TOOLS
+
+    return {**TOOLS, **OPERATOR_TOOLS}
+
+
 def get_tools(names: list[str]) -> list[Tool]:
-    return [TOOLS[n] for n in names]
+    registry = _all_tools()
+    return [registry[n] for n in names]

@@ -111,6 +111,7 @@ class AgentRunner:
         memory: Memory | None = None,
         max_depth: int = 2,
         http: httpx.AsyncClient | None = None,
+        operator_hub: Any = None,
     ) -> None:
         self.llm = llm
         self.agents = agents
@@ -121,6 +122,7 @@ class AgentRunner:
         self.memory = memory
         self.max_depth = max_depth
         self.http = http
+        self.operator_hub = operator_hub
 
     def workspace(self, client: str) -> Path:
         path = self.workspaces_dir / safe_name(client)
@@ -143,6 +145,7 @@ class AgentRunner:
             http=self.http,
             delegate=self._delegate_fn(client, depth),
             delegates=profile.delegates if depth < self.max_depth else [],
+            operator_hub=self.operator_hub,
         )
         convo = [{"role": "system", "content": await self._system_prompt(profile, tools, messages)}]
         convo += messages

@@ -27,8 +27,19 @@ _GIT_RULES: dict[str, str] = {
 }
 
 
+# Operator actions on the owner's own computer that should be confirmed from the phone.
+_OPERATOR_RISKY = {
+    "os_shell": "runs a shell command on your computer",
+    "os_run": "launches a program on your computer",
+    "os_write_file": "writes a file on your computer",
+    "os_delete": "deletes files on your computer",
+}
+
+
 def classify(tool: str, args: dict[str, Any]) -> str | None:
     """Return a short reason if the call is risky, else None."""
+    if tool in _OPERATOR_RISKY:
+        return _OPERATOR_RISKY[tool]
     if tool == "shell":
         command = str(args.get("command", ""))
         for pattern, reason in _SHELL_RULES:

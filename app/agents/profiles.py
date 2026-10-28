@@ -8,7 +8,27 @@ from typing import Any
 
 import yaml
 
-KNOWN_TOOLS = {"shell", "read_file", "write_file", "list_dir", "git", "http_get", "delegate"}
+KNOWN_TOOLS = {
+    "shell",
+    "read_file",
+    "write_file",
+    "list_dir",
+    "git",
+    "http_get",
+    "delegate",
+    # operator tools (executed on the owner's computer by the host worker)
+    "screenshot",
+    "mouse_move",
+    "mouse_click",
+    "mouse_scroll",
+    "type_text",
+    "key_press",
+    "os_run",
+    "os_shell",
+    "os_read_file",
+    "os_write_file",
+    "os_list_dir",
+}
 
 
 @dataclass(frozen=True)

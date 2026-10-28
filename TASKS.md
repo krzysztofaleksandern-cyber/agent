@@ -93,7 +93,15 @@ ruff clean, docs updated, commit, summary, STOP.
 
 ## Part 2 – New agents (in progress)
 - [x] Phase 12: Gemini provider with 5-key rotation
-- [ ] Phase 13: `operator` agent + host worker (control the owner's own computer)
+- [x] Phase 13: `operator` agent + host worker (control the owner's own computer)
 - [ ] Phase 14: phone PWA with one-time-password login (Chrome, no install)
 
 (TTS skipped: owner already has a voice agent of their own.)
+
+### Phase 13 details – operator agent & host worker ✅
+- [x] `OperatorHub`: long-poll command channel VPS <-> host worker, dispatch + result + online status
+- [x] Operator tools (screenshot, mouse_move/click/scroll, type_text, key_press, os_run/shell/read/write/list) routed to the worker
+- [x] `/v1/operator/poll` + `/v1/operator/result` (worker token), `/v1/operator/status` (admin)
+- [x] `config/agents.yaml`: `operator` agent (Windows); risky os_* actions gated by approvals
+- [x] `worker/operator_worker.py` (Windows, pyautogui), requirements, README
+- [x] tests for hub, tools, risk classification, worker channel
