@@ -32,6 +32,10 @@ class Answer(BaseModel):
     answer: str
 
 
+class Pause(BaseModel):
+    paused: bool
+
+
 async def require_session(
     request: Request, creds: HTTPAuthorizationCredentials | None = Depends(_bearer)
 ) -> str:
@@ -123,3 +127,15 @@ async def answer(
 @router.get("/api/activity")
 async def activity(request: Request, _: str = Depends(require_session)) -> list[dict[str, Any]]:
     return [e.public() for e in request.app.state.audit.recent(30)]
+
+
+@router.get("/api/pause")
+async def get_pause(request: Request, _: str = Depends(require_session)) -> dict[str, bool]:
+    return {"paused": request.app.state.control.paused}
+
+
+@router.post("/api/pause")
+async def set_pause(
+    body: Pause, request: Request, _: str = Depends(require_session)
+) -> dict[str, bool]:
+    return {"paused": request.app.state.control.set_paused(body.paused)}

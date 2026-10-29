@@ -32,6 +32,7 @@ swapped or mocked. Wiring happens in one place: `app/main.py` (`create_app()` + 
 app/
   main.py        FastAPI app factory, lifespan, dependency wiring, /health
   config.py      Settings (pydantic-settings, reads env / .env)
+  control.py     Phase 23: global pause (kill switch) halting all agent actions
   logging.py     logging setup + secret/message redaction
   llm/           Phase 2: LLMClient protocol, OpenAI-compatible client (Ollama/vLLM),
                  MockLLM, model registry (models.yaml) with fallback, usage meter,

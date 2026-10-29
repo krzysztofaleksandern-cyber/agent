@@ -25,6 +25,7 @@ from app.approvals.gate import ApprovalGate
 from app.audit.log import AuditLog
 from app.config import Settings, get_settings
 from app.console.manager import ConsoleManager
+from app.control import ControlState
 from app.learning.evaluate import load_cases
 from app.learning.pipeline import LearningPipeline
 from app.learning.versions import VersionStore
@@ -156,6 +157,7 @@ def create_app(
         app.state.learning.apply_active()
         app.state.operator = OperatorHub(dispatch_timeout=settings.operator_dispatch_timeout)
         app.state.audit = AuditLog(settings.db_path)
+        app.state.control = ControlState()
         app.state.console = ConsoleManager(
             settings.db_path, settings.console_otp_ttl, settings.console_session_ttl
         )
@@ -170,6 +172,7 @@ def create_app(
             operator_hub=app.state.operator,
             services=_make_services(settings),
             audit=app.state.audit,
+            control=app.state.control,
         )
 
         async def run_task(task: Task) -> str:

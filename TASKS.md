@@ -155,3 +155,8 @@ ruff clean, docs updated, commit, summary, STOP.
 - [x] `CrmStore` (SQLite): contacts (email de-dupe) and deals with stages; lead capture
 - [x] tools crm_add_contact / crm_find_contact / crm_add_deal / crm_list_deals / crm_set_stage
 - [x] POST /v1/leads for website forms (client key); sales + support agents; tests included
+
+### Phase 23 – Safety: master pause (kill switch) ✅
+- [x] `ControlState` global pause; agent loop takes no tool actions while paused
+- [x] POST /v1/admin/pause (admin) and /console/api/pause (phone), big STOP button in the PWA
+- [x] tests: paused runner performs no actions, resume restores action

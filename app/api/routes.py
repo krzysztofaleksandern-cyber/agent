@@ -187,3 +187,14 @@ async def capture_lead(
     )
     log.info("lead captured via %s by %s", body.source, principal.label)
     return result
+
+
+class PauseIn(BaseModel):
+    paused: bool
+
+
+@router.post("/admin/pause")
+async def admin_pause(
+    body: "PauseIn", request: Request, _: Principal = Depends(require_admin)
+) -> dict[str, bool]:
+    return {"paused": request.app.state.control.set_paused(body.paused)}

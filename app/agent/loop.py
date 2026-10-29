@@ -115,6 +115,7 @@ class AgentRunner:
         operator_hub: Any = None,
         services: dict[str, Any] | None = None,
         audit: Any = None,
+        control: Any = None,
     ) -> None:
         self.llm = llm
         self.agents = agents
@@ -128,6 +129,7 @@ class AgentRunner:
         self.operator_hub = operator_hub
         self.services = services or {}
         self.audit = audit
+        self.control = control
         self.max_images = 2
 
     def workspace(self, client: str) -> Path:
@@ -170,6 +172,17 @@ class AgentRunner:
             if not calls:
                 return await self._finish(
                     profile, client, messages, resp.content or "", step, "final", usage, tool_log
+                )
+            if self.control is not None and self.control.paused:
+                return await self._finish(
+                    profile,
+                    client,
+                    messages,
+                    "Paused by the owner — no actions were taken. Resume from the phone.",
+                    step,
+                    "paused",
+                    usage,
+                    tool_log,
                 )
             convo.append(resp.to_message() if native else {"role": "assistant",
                                                             "content": resp.content})  # fmt: skip

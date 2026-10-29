@@ -47,6 +47,7 @@
 <main id="app" class="hidden">
   <p class="mut"><span id="dot" class="dot"></span><span id="statusTxt">sprawdzam…</span>
      <button id="logout" class="sec" style="width:auto;float:right;margin:0;padding:6px 12px;">Wyloguj</button></p>
+  <button id="pause" class="no">⛔ ZATRZYMAJ wszystko</button>
 
   <div id="approvals"></div>
 
@@ -125,6 +126,21 @@ async function refresh() {
   }
   const ar = await api("/approvals");
   if (ar.ok) renderApprovals(await ar.json());
+  const pr = await api("/pause");
+  if (pr.ok) setPauseButton((await pr.json()).paused);
+}
+
+function setPauseButton(paused) {
+  const b = $("pause");
+  b.textContent = paused ? "▶ WZNÓW (zatrzymane)" : "⛔ ZATRZYMAJ wszystko";
+  b.className = paused ? "" : "no";
+  b.dataset.paused = paused ? "1" : "";
+}
+
+async function togglePause() {
+  const paused = $("pause").dataset.paused !== "1";
+  const r = await api("/pause", { method: "POST", body: JSON.stringify({ paused }) });
+  if (r.ok) setPauseButton((await r.json()).paused);
 }
 
 function renderApprovals(list) {
@@ -173,6 +189,7 @@ $("loginBtn").onclick = login;
 $("otp").addEventListener("keydown", (e) => { if (e.key === "Enter") login(); });
 $("send").onclick = send;
 $("logout").onclick = logout;
+$("pause").onclick = togglePause;
 start();
 if ("serviceWorker" in navigator) navigator.serviceWorker.register("/console/sw.js").catch(() => {});
 </script>

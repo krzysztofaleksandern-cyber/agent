@@ -386,3 +386,26 @@ def test_lead_capture_api(client: TestClient, key: str) -> None:
     assert crm.get_deal(r.json()["deal_id"]).stage == "new"
     # needs a key
     assert client.post("/v1/leads", json={"name": "x"}).status_code == 401
+
+
+def test_pause_switch(client: TestClient, key: str) -> None:
+    # admin can pause
+    assert (
+        client.post("/v1/admin/pause", json={"paused": True}, headers=auth(ADMIN)).json()["paused"]
+        is True
+    )
+    assert client.app.state.control.paused
+    # console session can see and resume
+    otp, _ = client.app.state.console.create_otp()
+    tok = client.post("/console/api/login", json={"otp": otp}).json()["token"]
+    h = {"Authorization": "Bearer " + tok}
+    assert client.get("/console/api/pause", headers=h).json()["paused"] is True
+    assert (
+        client.post("/console/api/pause", json={"paused": False}, headers=h).json()["paused"]
+        is False
+    )
+    assert not client.app.state.control.paused
+    # a client key cannot pause via admin
+    assert (
+        client.post("/v1/admin/pause", json={"paused": True}, headers=auth(key)).status_code == 403
+    )
