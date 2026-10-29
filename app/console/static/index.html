@@ -1,0 +1,197 @@
+<!doctype html>
+<html lang="pl">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="theme-color" content="#0b0f14" />
+<link rel="manifest" href="/console/manifest.webmanifest" />
+<title>devagent</title>
+<style>
+  :root { --bg:#0b0f14; --panel:#131a23; --line:#26303c; --fg:#e6edf3; --mut:#8b97a6;
+          --accent:#16a34a; --danger:#dc2626; }
+  * { box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  body { margin:0; background:var(--bg); color:var(--fg); font:16px/1.5 system-ui,sans-serif;
+         padding:env(safe-area-inset-top) 16px calc(16px + env(safe-area-inset-bottom)); }
+  h1 { font-size:18px; margin:16px 0 4px; }
+  .mut { color:var(--mut); font-size:13px; }
+  .card { background:var(--panel); border:1px solid var(--line); border-radius:12px;
+          padding:14px; margin:12px 0; }
+  input, textarea, button { font:inherit; border-radius:10px; border:1px solid var(--line);
+          background:#0e141b; color:var(--fg); padding:12px; width:100%; }
+  textarea { resize:vertical; min-height:64px; }
+  button { background:var(--accent); border:none; color:#fff; font-weight:600; margin-top:10px;
+           cursor:pointer; }
+  button.sec { background:#1c2531; }
+  button.no { background:var(--danger); }
+  .row { display:flex; gap:10px; }
+  .dot { display:inline-block; width:9px; height:9px; border-radius:50%; background:var(--danger);
+         margin-right:6px; vertical-align:middle; }
+  .dot.on { background:var(--accent); }
+  .msg { white-space:pre-wrap; word-break:break-word; border-top:1px solid var(--line);
+         padding:10px 0; font-size:14px; }
+  .msg.me { color:var(--mut); }
+  .hidden { display:none; }
+  .ap { border:1px solid var(--danger); border-radius:10px; padding:10px; margin:8px 0; }
+</style>
+</head>
+<body>
+<h1>devagent console</h1>
+
+<section id="login" class="card">
+  <p class="mut">Wpisz jednorazowy kod z serwera (<code>python -m app.cli console-otp</code>).</p>
+  <input id="otp" inputmode="numeric" autocomplete="one-time-code" placeholder="kod, np. 123456" />
+  <button id="loginBtn">Zaloguj</button>
+  <p id="loginErr" class="mut"></p>
+</section>
+
+<main id="app" class="hidden">
+  <p class="mut"><span id="dot" class="dot"></span><span id="statusTxt">sprawdzam…</span>
+     <button id="logout" class="sec" style="width:auto;float:right;margin:0;padding:6px 12px;">Wyloguj</button></p>
+  <button id="pause" class="no">⛔ ZATRZYMAJ wszystko</button>
+
+  <div id="approvals"></div>
+
+  <section class="card">
+    <textarea id="cmd" placeholder="Powiedz, co ma zrobić komputer…"></textarea>
+    <button id="send">Wyślij</button>
+  </section>
+
+  <section id="log"></section>
+</main>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const token = () => localStorage.getItem("devagent_token");
+const api = (path, opts = {}) => fetch("/console/api" + path, {
+  ...opts,
+  headers: { "Content-Type": "application/json", "Authorization": "Bearer " + token(), ...(opts.headers||{}) },
+});
+
+function show(loggedIn) {
+  $("login").classList.toggle("hidden", loggedIn);
+  $("app").classList.toggle("hidden", !loggedIn);
+}
+
+async function login() {
+  $("loginErr").textContent = "";
+  const r = await fetch("/console/api/login", {
+    method: "POST", headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ otp: $("otp").value }),
+  });
+  if (!r.ok) { $("loginErr").textContent = "Nieprawidłowy lub wygasły kod."; return; }
+  const d = await r.json();
+  localStorage.setItem("devagent_token", d.token);
+  $("otp").value = "";
+  start();
+}
+
+function addMsg(text, cls) {
+  const el = document.createElement("div");
+  el.className = "msg " + (cls || "");
+  el.textContent = text;
+  $("log").prepend(el);
+}
+
+async function send() {
+  const text = $("cmd").value.trim();
+  if (!text) return;
+  $("cmd").value = "";
+  addMsg(text, "me");
+  const r = await api("/command", { method: "POST", body: JSON.stringify({ text }) });
+  if (r.status === 401) return start();
+  if (!r.ok) { addMsg("Błąd wysyłania."); return; }
+  const task = await r.json();
+  poll(task.id);
+}
+
+async function poll(id) {
+  for (let i = 0; i < 600; i++) {
+    const r = await api("/command/" + id);
+    if (!r.ok) break;
+    const t = await r.json();
+    if (t.status === "done") { addMsg(t.result || "(brak odpowiedzi)"); return; }
+    if (t.status === "failed") { addMsg("Nie udało się: " + (t.error || "")); return; }
+    if (t.status === "cancelled") { addMsg("Anulowano."); return; }
+    await new Promise((res) => setTimeout(res, 1500));
+  }
+}
+
+async function refresh() {
+  const r = await api("/status");
+  if (r.status === 401) return start();
+  if (r.ok) {
+    const s = await r.json();
+    $("dot").classList.toggle("on", s.online);
+    $("statusTxt").textContent = s.online ? "komputer połączony" : "komputer offline";
+  }
+  const ar = await api("/approvals");
+  if (ar.ok) renderApprovals(await ar.json());
+  const pr = await api("/pause");
+  if (pr.ok) setPauseButton((await pr.json()).paused);
+}
+
+function setPauseButton(paused) {
+  const b = $("pause");
+  b.textContent = paused ? "▶ WZNÓW (zatrzymane)" : "⛔ ZATRZYMAJ wszystko";
+  b.className = paused ? "" : "no";
+  b.dataset.paused = paused ? "1" : "";
+}
+
+async function togglePause() {
+  const paused = $("pause").dataset.paused !== "1";
+  const r = await api("/pause", { method: "POST", body: JSON.stringify({ paused }) });
+  if (r.ok) setPauseButton((await r.json()).paused);
+}
+
+function renderApprovals(list) {
+  const box = $("approvals");
+  box.innerHTML = "";
+  for (const a of list) {
+    const el = document.createElement("div");
+    el.className = "ap";
+    el.innerHTML = `<b>Potwierdzenie</b><br><span class="mut">${a.reason}</span>
+      <div class="mut" style="margin:6px 0;word-break:break-all;">${a.tool}: ${a.arguments}</div>`;
+    const row = document.createElement("div");
+    row.className = "row";
+    const yes = document.createElement("button");
+    yes.textContent = "TAK";
+    yes.onclick = () => answer(a.id, "TAK");
+    const no = document.createElement("button");
+    no.textContent = "NIE"; no.className = "no";
+    no.onclick = () => answer(a.id, "NIE");
+    row.append(yes, no);
+    el.append(row);
+    box.append(el);
+  }
+}
+
+async function answer(id, ans) {
+  await api("/approvals/" + id, { method: "POST", body: JSON.stringify({ answer: ans }) });
+  refresh();
+}
+
+async function logout() {
+  await api("/logout", { method: "POST" });
+  localStorage.removeItem("devagent_token");
+  show(false);
+}
+
+let timer = null;
+function start() {
+  if (!token()) { show(false); return; }
+  show(true);
+  refresh();
+  clearInterval(timer);
+  timer = setInterval(refresh, 3000);
+}
+
+$("loginBtn").onclick = login;
+$("otp").addEventListener("keydown", (e) => { if (e.key === "Enter") login(); });
+$("send").onclick = send;
+$("logout").onclick = logout;
+$("pause").onclick = togglePause;
+start();
+if ("serviceWorker" in navigator) navigator.serviceWorker.register("/console/sw.js").catch(() => {});
+</script>
+</body>
+</html>

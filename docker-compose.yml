@@ -1,0 +1,15 @@
+# Local development stack (no HTTPS). Production: deploy/vps/docker-compose.yml
+services:
+  app:
+    build: .
+    env_file: .env
+    environment:
+      DATA_DIR: /srv/data
+    ports:
+      - "127.0.0.1:8080:8080"
+    volumes:
+      - agent-data:/srv/data
+    restart: unless-stopped
+
+volumes:
+  agent-data:

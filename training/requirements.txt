@@ -1,0 +1,5 @@
+# GPU box only. Install inside the Vast.ai instance (PyTorch + CUDA image):
+#   pip install -r training/requirements.txt
+unsloth
+trl
+datasets

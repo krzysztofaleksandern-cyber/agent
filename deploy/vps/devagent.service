@@ -1,0 +1,18 @@
+# /etc/systemd/system/devagent.service  (repo cloned to /opt/devagent)
+# sudo systemctl daemon-reload && sudo systemctl enable --now devagent
+[Unit]
+Description=devagent AI platform (docker compose)
+After=docker.service network-online.target tailscaled.service
+Requires=docker.service
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+WorkingDirectory=/opt/devagent
+ExecStart=/opt/devagent/deploy/vps/start.sh
+ExecStop=/usr/bin/docker compose -f deploy/vps/docker-compose.yml down
+TimeoutStartSec=600
+
+[Install]
+WantedBy=multi-user.target

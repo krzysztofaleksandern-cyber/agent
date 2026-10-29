@@ -1,0 +1,58 @@
+# Model registry. Backends are OpenAI-compatible endpoints; aliases are what agents use.
+# ${VAR} in base_url is expanded from the environment.
+#
+# Suggested models (pull on the GPU box with `ollama pull <name>`):
+#   24 GB (RTX 3090 Ti): qwen2.5-coder:14b, qwen2.5:14b, llama3.1:8b
+#   32 GB (V100S):       qwen2.5-coder:32b (q4), qwen2.5:14b
+backends:
+  gpu:
+    base_url: ${OLLAMA_URL}/v1
+    timeout: 300
+  # Google Gemini via its OpenAI-compatible endpoint. Put your keys (comma-separated,
+  # free-tier keys are fine) in GEMINI_API_KEYS in .env; requests rotate across them.
+  gemini:
+    base_url: https://generativelanguage.googleapis.com/v1beta/openai
+    keys_env: GEMINI_API_KEYS
+    timeout: 120
+  # Second Ollama/vLLM box, if you ever add one:
+  # gpu2:
+  #   base_url: http://10.0.0.3:8000/v1
+  #   api_key_env: GPU2_API_KEY
+
+default: general
+
+models:
+  coder:
+    backend: gpu
+    model: qwen2.5-coder:14b
+    temperature: 0.2
+    fallback: [coder-small]
+  coder-small:
+    backend: gpu
+    model: qwen2.5-coder:7b
+    temperature: 0.2
+  general:
+    backend: gpu
+    model: qwen2.5:14b
+    temperature: 0.7
+    fallback: [general-small]
+  general-small:
+    backend: gpu
+    model: llama3.1:8b
+    temperature: 0.7
+  # Vision model for the operator to SEE the screen (ollama pull llama3.2-vision:11b
+  # or qwen2.5vl:7b). Needs ~8-12 GB VRAM.
+  operator-vision:
+    backend: gpu
+    model: llama3.2-vision:11b
+    temperature: 0.2
+  # Gemini aliases (point an agent's `model` here, or add as a fallback above).
+  gemini-pro:
+    backend: gemini
+    model: gemini-2.5-pro
+    temperature: 0.4
+    fallback: [gemini-flash]
+  gemini-flash:
+    backend: gemini
+    model: gemini-2.5-flash
+    temperature: 0.4

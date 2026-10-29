@@ -1,0 +1,12 @@
+# Disposable sandbox for agent commands. Build: docker build -f Dockerfile.sandbox -t devagent-sandbox .
+FROM python:3.12-slim
+
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends git openssh-client ca-certificates nodejs npm \
+    && rm -rf /var/lib/apt/lists/* \
+    && pip install --no-cache-dir pytest ruff \
+    && useradd --create-home --uid 1000 agent \
+    && git config --system --add safe.directory /workspace
+
+USER 1000:1000
+WORKDIR /workspace
