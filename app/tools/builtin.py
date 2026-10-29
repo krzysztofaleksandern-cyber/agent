@@ -200,10 +200,18 @@ TOOLS: dict[str, Tool] = {
 def _all_tools() -> dict[str, Tool]:
     from app.connectors.calendar_tools import CALENDAR_TOOLS
     from app.connectors.crm_tools import CRM_TOOLS
+    from app.connectors.document_tools import DOCUMENT_TOOLS
     from app.connectors.mail_tools import MAIL_TOOLS
     from app.operator.tools import OPERATOR_TOOLS
 
-    return {**TOOLS, **OPERATOR_TOOLS, **MAIL_TOOLS, **CALENDAR_TOOLS, **CRM_TOOLS}
+    return {
+        **TOOLS,
+        **OPERATOR_TOOLS,
+        **MAIL_TOOLS,
+        **CALENDAR_TOOLS,
+        **CRM_TOOLS,
+        **DOCUMENT_TOOLS,
+    }
 
 
 def get_tools(names: list[str]) -> list[Tool]:

@@ -40,6 +40,7 @@ KNOWN_TOOLS = {
     "crm_add_deal",
     "crm_list_deals",
     "crm_set_stage",
+    "make_document",
 }
 
 

@@ -39,6 +39,7 @@ extend-immutable-calls = ["fastapi.Depends"]
 
 [tool.ruff.lint.per-file-ignores]
 "tests/**" = ["S105", "S106"]  # hardcoded fake secrets in tests
+"app/connectors/documents.py" = ["E501"]  # long OOXML schema URIs
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"

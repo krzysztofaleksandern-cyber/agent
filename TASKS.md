@@ -160,3 +160,8 @@ ruff clean, docs updated, commit, summary, STOP.
 - [x] `ControlState` global pause; agent loop takes no tool actions while paused
 - [x] POST /v1/admin/pause (admin) and /console/api/pause (phone), big STOP button in the PWA
 - [x] tests: paused runner performs no actions, resume restores action
+
+### Phase 24 – Document generation ✅
+- [x] dependency-free .docx (zipfile + OOXML) and .html from light markdown (headings, bullets, bold)
+- [x] make_document tool (path extension picks format); writer + secretary can produce documents
+- [x] tests validate the docx is a valid zip with headings and bold runs

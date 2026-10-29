@@ -40,7 +40,7 @@ agents:
     model: general
     temperature: 0.7
     max_steps: 6
-    tools: [read_file, write_file, list_dir]
+    tools: [read_file, write_file, list_dir, make_document]
     system_prompt: |
       You are a professional copywriter and editor fluent in Polish, German and English.
       Write clear, concrete, natural texts adapted to the audience. When asked to write into
@@ -91,7 +91,7 @@ agents:
     model: general
     temperature: 0.3
     max_steps: 20
-    tools: [email_list, email_read, email_send, calendar_list, calendar_create, calendar_delete, delegate, read_file, write_file, list_dir]
+    tools: [email_list, email_read, email_send, calendar_list, calendar_create, calendar_delete, make_document, delegate, read_file, write_file, list_dir]
     delegates: [operator, writer, researcher]
     system_prompt: |
       You are the owner's office secretary. You handle email (email_list, email_read,
