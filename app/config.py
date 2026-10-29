@@ -77,6 +77,19 @@ class Settings(BaseSettings):
     # Invoicing: default seller block (your company details) on issued invoices
     company_seller: str = ""
 
+    # Telegram channel (optional): Jarvis answers your messages
+    telegram_bot_token: SecretStr = SecretStr("")
+    telegram_webhook_secret: SecretStr = SecretStr("")
+    telegram_allowed_chats: str = ""  # comma-separated chat ids allowed to talk to Jarvis
+
+    @property
+    def telegram_enabled(self) -> bool:
+        return bool(self.telegram_bot_token.get_secret_value())
+
+    @property
+    def telegram_allowed_list(self) -> list[str]:
+        return [c.strip() for c in self.telegram_allowed_chats.split(",") if c.strip()]
+
     @property
     def email_enabled(self) -> bool:
         return bool(self.email_imap_host and self.email_username)

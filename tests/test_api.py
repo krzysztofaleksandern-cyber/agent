@@ -409,3 +409,30 @@ def test_pause_switch(client: TestClient, key: str) -> None:
     assert (
         client.post("/v1/admin/pause", json={"paused": True}, headers=auth(key)).status_code == 403
     )
+
+
+def test_telegram_webhook(client: TestClient) -> None:
+    from pydantic import SecretStr
+
+    s = client.app.state.settings
+    s.telegram_webhook_secret = SecretStr("whsec")
+    s.telegram_allowed_chats = "100"
+    hdr = {"X-Telegram-Bot-Api-Secret-Token": "whsec"}
+    # bad secret
+    assert (
+        client.post(
+            "/v1/telegram/webhook", json={}, headers={"X-Telegram-Bot-Api-Secret-Token": "no"}
+        ).status_code
+        == 401
+    )
+    # allowed chat -> a jarvis task is created
+    upd = {"message": {"chat": {"id": 100}, "text": "co słychać"}}
+    assert client.post("/v1/telegram/webhook", json=upd, headers=hdr).json() == {"ok": True}
+    tasks = client.app.state.tasks.list(client="telegram:100")
+    assert tasks and tasks[0].agent == "jarvis"
+    # non-allowlisted chat is ignored (no task)
+    other = {"message": {"chat": {"id": 999}, "text": "hej"}}
+    assert client.post("/v1/telegram/webhook", json=other, headers=hdr).json() == {"ok": True}
+    assert client.app.state.tasks.list(client="telegram:999") == []
+    # non-text update is a no-op
+    assert client.post("/v1/telegram/webhook", json={"foo": 1}, headers=hdr).json() == {"ok": True}

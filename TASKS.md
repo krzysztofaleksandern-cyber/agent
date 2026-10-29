@@ -170,3 +170,8 @@ ruff clean, docs updated, commit, summary, STOP.
 - [x] `InvoiceStore` (SQLite): per-year numbering, line items, VAT totals, status, markdown/HTML render
 - [x] tools invoice_create (approval) / invoice_list / invoice_get / invoice_set_status
 - [x] bookkeeper agent; company seller from COMPANY_SELLER; tests included
+
+### Phase 26 – Telegram channel ✅
+- [x] TelegramClient (send, set_webhook) over httpx; parse_update
+- [x] POST /v1/telegram/webhook (secret-token checked, chat-id allowlist) -> jarvis task
+- [x] task notifier replies to telegram:<chat_id> tasks; tests included

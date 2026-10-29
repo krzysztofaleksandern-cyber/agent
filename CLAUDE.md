@@ -48,7 +48,7 @@ app/
   memory/        Phase 9: history, ratings, lessons, Embedder (Ollama embeddings), RAG
   operator/      Phase 13: command channel to the host worker controlling the owner's PC
   console/       Phase 14: phone PWA (OTP login) to drive the operator agent + approvals
-  connectors/    Phase 16+: office connectors (email IMAP/SMTP; calendar, …) behind interfaces
+  connectors/    Phase 16+: office connectors (email, calendar, crm, invoicing, documents, telegram)
   audit/         Phase 18: durable log of every tool action (admin + console)
   scheduler/     Phase 19: recurring jobs (daily/weekly/interval) -> agent tasks
   learning/      Phase 10: dataset builder, LoRA training job, model versioning, eval, rollback

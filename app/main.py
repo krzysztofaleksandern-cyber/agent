@@ -21,6 +21,7 @@ from app.api.memory_routes import router as memory_router
 from app.api.operator_routes import router as operator_router
 from app.api.routes import router as api_router
 from app.api.tasks_routes import router as tasks_router
+from app.api.telegram_routes import router as telegram_router
 from app.approvals.gate import ApprovalGate
 from app.audit.log import AuditLog
 from app.config import Settings, get_settings
@@ -129,6 +130,11 @@ def create_app(
         usage_path = Path(settings.data_dir) / "usage.json"
         app.state.llm.usage.load(usage_path)
         app.state.webhooks = WebhookSender(settings.webhook_secret.get_secret_value())
+        app.state.telegram = None
+        if settings.telegram_enabled:
+            from app.connectors.telegram import TelegramClient
+
+            app.state.telegram = TelegramClient(settings.telegram_bot_token.get_secret_value())
         app.state.tasks = TaskStore(settings.db_path)
 
         async def notify_approval(payload: dict) -> None:
@@ -189,6 +195,10 @@ def create_app(
                 await app.state.webhooks.send(
                     task.webhook_url, "task." + task.status, task.public()
                 )
+            if app.state.telegram is not None and task.client.startswith("telegram:"):
+                chat_id = task.client.split(":", 1)[1]
+                reply = task.result or f"(zadanie: {task.status})"
+                await app.state.telegram.send_message(chat_id, reply)
 
         app.state.worker = Worker(
             app.state.tasks,
@@ -226,6 +236,8 @@ def create_app(
             await embedder_close()
         app.state.tasks.close()
         await app.state.webhooks.aclose()
+        if app.state.telegram is not None:
+            await app.state.telegram.aclose()
         app.state.llm.usage.save(usage_path)
         services_cal = app.state.runner.services.get("calendar")
         if services_cal is not None:
@@ -245,6 +257,7 @@ def create_app(
     app.include_router(memory_router)
     app.include_router(learning_router)
     app.include_router(jobs_router)
+    app.include_router(telegram_router)
     app.include_router(operator_router)
     app.include_router(console_router)
 
