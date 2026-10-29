@@ -42,3 +42,16 @@ def test_upsert_rejects_invalid_and_keeps_state(tmp_path: Path) -> None:
     assert reg.get("a").model == "m"
     reg.upsert("a", {"max_steps": 3})
     assert AgentRegistry(p, ["m"]).get("a").max_steps == 3
+
+
+def test_office_agents_present_and_valid() -> None:
+    aliases = load_config(ROOT / "config/models.yaml", {"OLLAMA_URL": "x", "GEMINI_API_KEYS": "k"})
+    reg = AgentRegistry(ROOT / "config/agents.yaml", aliases.models)
+    assert {"jarvis", "secretary", "researcher"} <= set(reg.names())
+    jarvis = reg.get("jarvis")
+    assert "operator" in jarvis.delegates and "secretary" in jarvis.delegates
+    assert "delegate" in jarvis.tools
+    # secretary reaches the computer only through the operator, not with raw os_* tools
+    sec = reg.get("secretary")
+    assert "operator" in sec.delegates
+    assert not any(t.startswith("os_") for t in sec.tools)

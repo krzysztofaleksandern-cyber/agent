@@ -112,3 +112,10 @@ ruff clean, docs updated, commit, summary, STOP.
 - [x] `/console/` PWA (installable, dark, mobile): OTP login, send commands to the operator agent, live worker status, TAK/NIE approvals
 - [x] session-scoped API: command/status/approvals (not an admin key); logout
 - [x] tests for OTP lifecycle, CLI, and the full PWA flow
+
+### Phase 15 – Jarvis, office agents, autostart & docs ✅
+- [x] Windows worker autostart (Task Scheduler via install_autostart.ps1) + worker/.env loading
+- [x] `jarvis` super-assistant delegating to all agents (operator/secretary/codex/writer/auditor/researcher)
+- [x] `secretary` (office admin via operator) and `researcher` (web + summaries) agents
+- [x] ASSEMBLY.md (full end-to-end setup incl. VoiceStudio voice loop), ROADMAP.md (path to 95%-office)
+- [x] tests for the new agent profiles

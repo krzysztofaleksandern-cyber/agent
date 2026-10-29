@@ -22,6 +22,22 @@ from typing import Any
 
 import httpx
 
+
+def _load_env_file() -> None:
+    """Load KEY=VALUE lines from a .env next to this script (for autostart, no shell env)."""
+    env_path = Path(__file__).resolve().parent / ".env"
+    if not env_path.exists():
+        return
+    for line in env_path.read_text().splitlines():
+        line = line.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+        key, _, value = line.partition("=")
+        os.environ.setdefault(key.strip(), value.strip().strip('"').strip("'"))
+
+
+_load_env_file()
+
 URL = os.environ.get("DEVAGENT_URL", "http://127.0.0.1:8080").rstrip("/")
 TOKEN = os.environ.get("OPERATOR_WORKER_TOKEN", "")
 SHOTS_DIR = Path(os.environ.get("DEVAGENT_SHOTS", Path.home() / ".devagent" / "shots"))

@@ -3,7 +3,7 @@
 Private, self-hosted AI agent platform (Python 3.12, FastAPI). No paid APIs: models are
 open-weight, served by **Ollama** (or vLLM) on a rented GPU (Vast.ai). The owner's own apps
 (bots, TTS, etc.) connect through this platform's **OpenAI-compatible API**, where
-`model` = agent name. Agents (orchestrator, codex, writer, auditor, …) each have their own
+`model` = agent name. Agents (jarvis, orchestrator, codex, writer, auditor, operator, secretary, researcher) each have their own
 prompt, model and tools; the orchestrator delegates to the others. The platform learns from
 history, ratings and self-written lessons (RAG) and periodically fine-tunes LoRA adapters.
 No content-moderation layer; API keys stay (security, not limits).

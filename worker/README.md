@@ -30,3 +30,24 @@ environment variables) in `shell:startup`, or wrap it as a service with NSSM.
   to be able to act, and stop it otherwise.
 - Keep `OPERATOR_WORKER_TOKEN` secret; rotate it (regenerate on the VPS and here) if leaked.
 - The VPS only ever reaches your PC through this outbound connection you initiated.
+
+## Autostart at logon (recommended)
+
+So the computer is always reachable by Jarvis without you launching anything:
+
+```powershell
+copy worker\.env.example worker\.env    # then edit worker\.env (URL + token)
+powershell -ExecutionPolicy Bypass -File worker\install_autostart.ps1
+```
+
+This registers a hidden Scheduled Task `devagent-worker` that starts at every logon and
+restarts itself if it crashes. It reads `worker\.env` (no shell variables needed).
+
+```powershell
+Stop-ScheduledTask  -TaskName devagent-worker      # pause now
+Start-ScheduledTask -TaskName devagent-worker      # resume
+powershell -File worker\uninstall_autostart.ps1    # remove autostart
+```
+
+Security: while the task runs, Jarvis can act on your PC (risky actions still need your
+TAK/NIE from the phone). Uninstall or `Stop-ScheduledTask` whenever you want it fully off.

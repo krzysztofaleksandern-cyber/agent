@@ -7,6 +7,10 @@ model and tools, work in a Docker sandbox, ask for approval before risky actions
 remember lessons and good answers, and can be fine-tuned on your rated conversations.
 No paid APIs, no moderation layer.
 
+Talk to **Jarvis** (the top agent) by voice or text from your phone; it drives the
+other agents and your own computer. Full step-by-step setup: **`ASSEMBLY.md`**.
+Where this is heading (replacing most office work): **`ROADMAP.md`**.
+
 Architecture and conventions: `CLAUDE.md`. Roadmap/status: `TASKS.md`.
 
 ```
