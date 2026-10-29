@@ -1,5 +1,6 @@
 """FastAPI application factory and dependency wiring."""
 
+import asyncio
 import logging
 import os
 from collections.abc import AsyncIterator
@@ -13,6 +14,7 @@ from app.agent.loop import AgentRunner
 from app.agents.profiles import AgentRegistry
 from app.api.approvals_routes import router as approvals_router
 from app.api.console_routes import router as console_router
+from app.api.jobs_routes import router as jobs_router
 from app.api.keys import KeyStore
 from app.api.learning_routes import router as learning_router
 from app.api.memory_routes import router as memory_router
@@ -34,6 +36,8 @@ from app.memory.service import MemoryService
 from app.memory.store import MemoryStore
 from app.operator.hub import OperatorHub
 from app.sandbox.runner import DockerSandbox, LocalRunner, SandboxRunner
+from app.scheduler.jobs import Job, JobStore
+from app.scheduler.runner import SchedulerLoop
 from app.tasks.store import Task, TaskStore
 from app.tasks.webhook import WebhookSender
 from app.tasks.worker import Worker
@@ -185,7 +189,25 @@ def create_app(
             retry_backoff=settings.task_retry_backoff,
         )
         app.state.worker.start()
+        app.state.jobs = JobStore(settings.db_path)
+
+        async def enqueue_job(job: Job) -> None:
+            await asyncio.to_thread(
+                app.state.tasks.create,
+                "scheduler",
+                job.agent,
+                [{"role": "user", "content": job.prompt}],
+                None,
+                settings.task_max_attempts,
+            )
+            app.state.worker.wake()
+            log.info("scheduled job %s -> task for agent %s", job.id, job.agent)
+
+        app.state.scheduler = SchedulerLoop(app.state.jobs, enqueue_job)
+        app.state.scheduler.start()
         yield
+        await app.state.scheduler.stop()
+        app.state.jobs.close()
         await app.state.worker.stop()
         await app.state.memory.drain()
         app.state.memory.store.close()
@@ -213,6 +235,7 @@ def create_app(
     app.include_router(approvals_router)
     app.include_router(memory_router)
     app.include_router(learning_router)
+    app.include_router(jobs_router)
     app.include_router(operator_router)
     app.include_router(console_router)
 

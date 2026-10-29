@@ -135,3 +135,8 @@ ruff clean, docs updated, commit, summary, STOP.
 - [x] `AuditLog` (SQLite): every tool action recorded (agent, client, tool, args, ok, note)
 - [x] agent loop records each tool call (incl. denied/ failed)
 - [x] GET /v1/admin/audit (admin) and /console/api/activity (phone); tests included
+
+### Phase 19 – Scheduler (recurring jobs) ✅
+- [x] `JobStore` (SQLite) + `compute_next` for every_minutes / daily HH:MM / weekly D:HH:MM (UTC)
+- [x] `SchedulerLoop` fires due jobs into the task queue for the chosen agent
+- [x] admin API: list/create/toggle/delete jobs; tests for schedules and firing

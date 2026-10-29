@@ -330,3 +330,30 @@ def test_admin_audit_and_console_activity(client: TestClient, key: str) -> None:
     tok = client.post("/console/api/login", json={"otp": otp}).json()["token"]
     act = client.get("/console/api/activity", headers={"Authorization": "Bearer " + tok})
     assert act.status_code == 200 and act.json()[0]["tool"] == "os_shell"
+
+
+def test_jobs_admin_api(client: TestClient, key: str) -> None:
+    assert client.get("/v1/admin/jobs", headers=auth(key)).status_code == 403
+    assert client.get("/v1/admin/jobs", headers=auth(ADMIN)).json() == []
+    body = {
+        "name": "Triage",
+        "agent": "helper",
+        "prompt": "check",
+        "kind": "daily",
+        "value": "08:00",
+    }
+    r = client.post("/v1/admin/jobs", json=body, headers=auth(ADMIN))
+    assert r.status_code == 201
+    jid = r.json()["id"]
+    assert (
+        client.post(
+            f"/v1/admin/jobs/{jid}/toggle", json={"enabled": False}, headers=auth(ADMIN)
+        ).json()["enabled"]
+        is False
+    )
+    bad = {**body, "value": "99:99"}
+    assert client.post("/v1/admin/jobs", json=bad, headers=auth(ADMIN)).status_code == 400
+    ghost = {**body, "agent": "ghost"}
+    assert client.post("/v1/admin/jobs", json=ghost, headers=auth(ADMIN)).status_code == 404
+    assert client.delete(f"/v1/admin/jobs/{jid}", headers=auth(ADMIN)).status_code == 200
+    assert client.delete(f"/v1/admin/jobs/{jid}", headers=auth(ADMIN)).status_code == 404
