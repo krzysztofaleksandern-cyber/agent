@@ -198,10 +198,13 @@ TOOLS: dict[str, Tool] = {
 
 
 def _all_tools() -> dict[str, Tool]:
+    from app.connectors.analytics_tools import ANALYTICS_TOOLS
     from app.connectors.calendar_tools import CALENDAR_TOOLS
     from app.connectors.crm_tools import CRM_TOOLS
     from app.connectors.document_tools import DOCUMENT_TOOLS
+    from app.connectors.invoice_tools import INVOICE_TOOLS
     from app.connectors.mail_tools import MAIL_TOOLS
+    from app.connectors.notes_tools import NOTES_TOOLS
     from app.operator.tools import OPERATOR_TOOLS
 
     return {
@@ -211,6 +214,9 @@ def _all_tools() -> dict[str, Tool]:
         **CALENDAR_TOOLS,
         **CRM_TOOLS,
         **DOCUMENT_TOOLS,
+        **INVOICE_TOOLS,
+        **NOTES_TOOLS,
+        **ANALYTICS_TOOLS,
     }
 
 

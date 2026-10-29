@@ -75,8 +75,11 @@ async def chat_completions(
     log.info("chat client=%s model=%s messages=%d", principal.label, model, len(body.messages))
     state = request.app.state
     interaction_id = None
+    is_agent = state.agents.get(model) is not None
+    if not is_agent and model not in llm.aliases():
+        return _error(404, f"model {model!r} not found", "invalid_request_error", "model_not_found")
     try:
-        if state.agents.get(model) is not None:
+        if is_agent:
             result = await state.runner.run(model, body.messages, client=principal.label)
             resp = result.as_response()
             interaction_id = result.interaction_id
@@ -88,8 +91,10 @@ async def chat_completions(
                 temperature=body.temperature,
                 max_tokens=body.max_tokens,
             )
-    except KeyError:
-        return _error(404, f"model {model!r} not found", "invalid_request_error", "model_not_found")
+    except KeyError as exc:
+        # The model/agent exists; a KeyError here is an internal wiring bug, not a 404.
+        log.exception("internal error handling model %s", model)
+        return _error(500, f"internal error: {exc}", "server_error")
     except LLMUnavailable as exc:
         return _error(503, f"model backend unavailable: {exc}", "server_error")
     except LLMBadResponse as exc:
