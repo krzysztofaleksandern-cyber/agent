@@ -1,14 +1,14 @@
-# ROADMAP
+# ROADMAP — toward replacing ~95% of an office
 
 > Status: blocks for email, calendar, scheduler, audit, knowledge base, operator vision,
 > CRM + web leads and the kill switch are **built** (phases 16–23). What remains below needs
 > external accounts/OAuth (cloud files, accounting, e-signature, Twilio) or a product decision.
- — toward replacing ~95% of an office
 
 The platform already gives you: a chief-of-staff agent (Jarvis), control of your own PC, a
-secretary, a coder, a writer, an auditor, a researcher, background jobs, approvals, memory
-and self-learning, plus your local voice (VoiceStudio). This is what to add next to cover a
-real office, ordered by value-for-effort. Nothing here is built yet — it's the plan.
+secretary, a coder, a writer, an auditor, a researcher, sales and support agents, background
+jobs, a scheduler, approvals, a kill switch, memory, self-learning, a company knowledge base,
+email, calendar and CRM, plus your local voice (VoiceStudio). Below is what remains to cover a
+real office, ordered by value-for-effort. Items marked ✅ are already built.
 
 Legend: ⭑ high value / low effort · ◆ needs an external integration/connector · ⚠ sensitive.
 
