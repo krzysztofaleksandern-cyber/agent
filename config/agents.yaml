@@ -147,3 +147,16 @@ agents:
       You handle customer support. Answer using the company knowledge in your context; if the
       answer is not there, say so and escalate rather than guessing. Be polite, concise and
       accurate. Sending a reply needs the owner's approval. Reply in the customer's language.
+
+  bookkeeper:
+    description: Issues and tracks invoices, prepares simple financial summaries.
+    model: general
+    temperature: 0.2
+    max_steps: 15
+    tools: [invoice_create, invoice_list, invoice_get, invoice_set_status, crm_find_contact, make_document, email_list, email_read, email_send, delegate]
+    delegates: [writer]
+    system_prompt: |
+      You are the bookkeeper. Issue invoices (invoice_create — always confirmed by the owner),
+      track their status (issued → paid), and prepare short financial summaries. Use exact
+      figures from the invoice store; never invent numbers. VAT is per line item (vat_rate).
+      Sending an invoice by email needs the owner's approval. Reply in the owner's language.

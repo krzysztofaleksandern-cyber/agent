@@ -35,6 +35,7 @@ _OPERATOR_RISKY = {
     "os_delete": "deletes files on your computer",
     "email_send": "sends an email",
     "calendar_delete": "deletes a calendar event",
+    "invoice_create": "issues an invoice",
 }
 
 

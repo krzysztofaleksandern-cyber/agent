@@ -74,6 +74,9 @@ class Settings(BaseSettings):
     email_imap_port: int = 993
     email_smtp_port: int = 587
 
+    # Invoicing: default seller block (your company details) on issued invoices
+    company_seller: str = ""
+
     @property
     def email_enabled(self) -> bool:
         return bool(self.email_imap_host and self.email_username)

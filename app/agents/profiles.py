@@ -41,6 +41,10 @@ KNOWN_TOOLS = {
     "crm_list_deals",
     "crm_set_stage",
     "make_document",
+    "invoice_create",
+    "invoice_list",
+    "invoice_get",
+    "invoice_set_status",
 }
 
 

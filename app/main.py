@@ -80,10 +80,12 @@ def _load_eval_cases(path: str) -> dict:
 def _make_services(settings: Settings) -> dict:
     from app.connectors.calendar import CalendarStore
     from app.connectors.crm import CrmStore
+    from app.connectors.invoicing import InvoiceStore
 
     services: dict = {
         "calendar": CalendarStore(settings.db_path),
         "crm": CrmStore(settings.db_path),
+        "invoices": InvoiceStore(settings.db_path, settings.company_seller),
     }
     if settings.email_enabled:
         from app.connectors.email import EmailConfig, ImapSmtpMailbox

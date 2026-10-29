@@ -165,3 +165,8 @@ ruff clean, docs updated, commit, summary, STOP.
 - [x] dependency-free .docx (zipfile + OOXML) and .html from light markdown (headings, bullets, bold)
 - [x] make_document tool (path extension picks format); writer + secretary can produce documents
 - [x] tests validate the docx is a valid zip with headings and bold runs
+
+### Phase 25 – Invoicing (bookkeeper) ✅
+- [x] `InvoiceStore` (SQLite): per-year numbering, line items, VAT totals, status, markdown/HTML render
+- [x] tools invoice_create (approval) / invoice_list / invoice_get / invoice_set_status
+- [x] bookkeeper agent; company seller from COMPANY_SELLER; tests included
