@@ -160,9 +160,14 @@ def execute(action: str, params: dict) -> dict:
     if handler is None:
         return {"ok": False, "error": f"unknown action {action}"}
     try:
-        return {"ok": True, "output": handler(params)}
+        output = handler(params)
     except Exception as exc:
         return {"ok": False, "error": f"{type(exc).__name__}: {exc}"}
+    # A handler may return a dict (e.g. screenshot with image_b64); keep output a str
+    # and lift extra fields (image_b64) to the top level so /result accepts them.
+    if isinstance(output, dict):
+        return {"ok": True, **output}
+    return {"ok": True, "output": output}
 
 
 def main() -> int:
@@ -178,7 +183,11 @@ def main() -> int:
                 if cmd is None:
                     continue
                 result = execute(cmd["action"], cmd.get("params", {}))
-                client.post("/v1/operator/result", json={"id": cmd["id"], **result})
+                resp = client.post("/v1/operator/result", json={"id": cmd["id"], **result})
+                try:
+                    resp.raise_for_status()
+                except httpx.HTTPStatusError as exc:
+                    print(f"result rejected: {exc}", file=sys.stderr)
             except httpx.HTTPError as exc:
                 print(f"connection error: {type(exc).__name__}; retrying in 5s", file=sys.stderr)
                 time.sleep(5)

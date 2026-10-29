@@ -22,6 +22,7 @@ class Result(BaseModel):
     ok: bool = True
     output: str = ""
     error: str | None = None
+    image_b64: str | None = None
 
 
 async def require_worker(
@@ -43,7 +44,8 @@ async def result(
     body: Result, request: Request, _: None = Depends(require_worker)
 ) -> dict[str, Any]:
     accepted = request.app.state.operator.submit_result(
-        body.id, {"ok": body.ok, "output": body.output, "error": body.error}
+        body.id,
+        {"ok": body.ok, "output": body.output, "error": body.error, "image_b64": body.image_b64},
     )
     return {"accepted": accepted}
 
