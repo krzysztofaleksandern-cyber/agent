@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="pl">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="theme-color" content="#0b0f14" />
+<title>snap2list</title>
+<style>
+  :root { --bg:#0b0f14; --panel:#131a23; --line:#26303c; --fg:#e6edf3; --mut:#8b97a6;
+          --accent:#6d28d9; --ok:#16a34a; }
+  * { box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  body { margin:0; background:var(--bg); color:var(--fg); font:16px/1.5 system-ui,sans-serif;
+         padding:env(safe-area-inset-top) 16px calc(16px + env(safe-area-inset-bottom)); }
+  h1 { font-size:20px; margin:16px 0 4px; }
+  .mut { color:var(--mut); font-size:13px; }
+  .card { background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:14px; margin:12px 0; }
+  input, textarea, button, select { font:inherit; border-radius:10px; border:1px solid var(--line);
+          background:#0e141b; color:var(--fg); padding:12px; width:100%; }
+  textarea { resize:vertical; min-height:120px; }
+  label { font-size:13px; color:var(--mut); display:block; margin:10px 0 4px; }
+  button { background:var(--accent); border:none; color:#fff; font-weight:600; cursor:pointer; }
+  button.ok { background:var(--ok); }
+  button.big { font-size:18px; padding:16px; }
+  .row { display:flex; gap:10px; }
+  .row > * { flex:1; }
+  img#preview { width:100%; border-radius:12px; margin-top:10px; display:none; }
+  .hidden { display:none; }
+  .price { font-size:24px; font-weight:700; }
+  .tag { display:inline-block; background:#1c2531; border-radius:999px; padding:3px 10px; margin:3px 3px 0 0; font-size:13px; }
+  #spinner { text-align:center; padding:20px; }
+</style>
+</head>
+<body>
+<h1>📸 snap2list</h1>
+<p class="mut">Zrób zdjęcie przedmiotu — dostaniesz gotowy opis i cenę do wystawienia.</p>
+
+<div class="card">
+  <input id="file" type="file" accept="image/*" capture="environment" />
+  <img id="preview" alt="podgląd" />
+  <button id="go" class="big" style="margin-top:12px;">Generuj opis</button>
+  <div id="spinner" class="hidden">⏳ Analizuję zdjęcie…</div>
+  <p id="err" class="mut"></p>
+</div>
+
+<div id="result" class="card hidden">
+  <label>Tytuł</label>
+  <input id="title" />
+  <label>Cena (PLN)</label>
+  <div class="row">
+    <input id="price" type="number" inputmode="decimal" />
+    <div style="flex:2"><span class="mut" id="range"></span></div>
+  </div>
+  <label>Kategoria / stan</label>
+  <div class="row">
+    <input id="category" />
+    <input id="condition" />
+  </div>
+  <label>Opis</label>
+  <textarea id="description"></textarea>
+  <div id="tags"></div>
+
+  <label style="margin-top:14px;">Wystaw</label>
+  <div class="row">
+    <button id="olx" class="ok">Wystaw na OLX</button>
+    <button id="allegro" class="ok">Wystaw na Allegro</button>
+  </div>
+  <div id="published" class="mut"></div>
+</div>
+
+<script>
+const $ = (id) => document.getElementById(id);
+let currentFile = null;
+
+$("file").addEventListener("change", (e) => {
+  currentFile = e.target.files[0] || null;
+  if (currentFile) {
+    const img = $("preview");
+    img.src = URL.createObjectURL(currentFile);
+    img.style.display = "block";
+  }
+});
+
+async function generate() {
+  if (!currentFile) { $("err").textContent = "Najpierw wybierz lub zrób zdjęcie."; return; }
+  $("err").textContent = "";
+  $("spinner").classList.remove("hidden");
+  $("go").disabled = true;
+  try {
+    const fd = new FormData();
+    fd.append("photo", currentFile);
+    const r = await fetch("/api/describe", { method: "POST", body: fd });
+    const d = await r.json();
+    if (!r.ok) { $("err").textContent = d.error || "Nie udało się wygenerować opisu."; return; }
+    fill(d);
+  } catch { $("err").textContent = "Błąd połączenia."; }
+  finally { $("spinner").classList.add("hidden"); $("go").disabled = false; }
+}
+
+function fill(d) {
+  $("title").value = d.title || "";
+  $("price").value = d.price_pln || "";
+  $("range").textContent = d.price_min_pln ? `widełki: ${d.price_min_pln}–${d.price_max_pln} zł` : "";
+  $("category").value = d.category || "";
+  $("condition").value = d.condition || "";
+  $("description").value = d.description || "";
+  const tags = $("tags"); tags.innerHTML = "";
+  (d.tags || []).forEach((t) => {
+    const s = document.createElement("span"); s.className = "tag"; s.textContent = t; tags.append(s);
+  });
+  $("result").classList.remove("hidden");
+  $("published").textContent = "";
+}
+
+function listing() {
+  return {
+    title: $("title").value, price_pln: parseFloat($("price").value) || 0,
+    category: $("category").value, condition: $("condition").value,
+    description: $("description").value,
+  };
+}
+
+async function publish(portal) {
+  $("published").textContent = "⏳ Przygotowuję…";
+  const r = await fetch("/api/publish/" + portal, {
+    method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(listing()),
+  });
+  const d = await r.json();
+  if (!r.ok) { $("published").textContent = d.error || "Błąd."; return; }
+  if (d.mode === "api") {
+    $("published").innerHTML = `✅ Wystawiono na ${d.portal}` + (d.offer_id ? ` (id ${d.offer_id})` : "");
+  } else {
+    try { await navigator.clipboard.writeText(d.copy_text); } catch {}
+    $("published").innerHTML =
+      `📋 Opis skopiowany. <a href="${d.open_url}" target="_blank" style="color:#9d7bff">Otwórz ${d.portal} i wklej →</a>`;
+  }
+}
+
+$("go").onclick = generate;
+$("olx").onclick = () => publish("olx");
+$("allegro").onclick = () => publish("allegro");
+</script>
+</body>
+</html>

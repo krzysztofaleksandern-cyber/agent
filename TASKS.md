@@ -184,3 +184,14 @@ ruff clean, docs updated, commit, summary, STOP.
 ### Phase 28 – Notes / to-do list ✅
 - [x] NotesStore (SQLite): add/list/done/delete; note_add/list/done/delete tools
 - [x] jarvis manages the owner's personal to-do list; tests included
+
+## Separate project: snap2list (photo -> marketplace listing)
+- [x] listing-app/: FastAPI; VisionClient (photo -> listing JSON via OpenAI-compatible vision)
+- [x] OLX/Allegro publishers (API when a token is set; manual draft fallback otherwise)
+- [x] mobile web UI (camera capture -> editable listing -> one-click Wystaw); tests green
+- [x] PRIORITY delivered first, per owner's request
+
+## builder/ (own-contribution evidence)
+- [x] builder/screenshots/ holds generated screenshots of working modules
+- [x] builder/report_data.py register; build_report.py -> raport_wklad_wlasny.pdf + .md
+- [x] dependency-free PDF generator with Polish glyphs; ~76 person-days, ~91 200 PLN est.
