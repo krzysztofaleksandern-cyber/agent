@@ -40,6 +40,12 @@ models:
     backend: gpu
     model: llama3.1:8b
     temperature: 0.7
+  # Vision model for the operator to SEE the screen (ollama pull llama3.2-vision:11b
+  # or qwen2.5vl:7b). Needs ~8-12 GB VRAM.
+  operator-vision:
+    backend: gpu
+    model: llama3.2-vision:11b
+    temperature: 0.2
   # Gemini aliases (point an agent's `model` here, or add as a fallback above).
   gemini-pro:
     backend: gemini

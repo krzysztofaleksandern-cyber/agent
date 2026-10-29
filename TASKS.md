@@ -145,3 +145,8 @@ ruff clean, docs updated, commit, summary, STOP.
 - [x] knowledge table in MemoryStore; chunking + embeddings; cosine search
 - [x] MemoryService.ingest; relevant chunks injected into every agent's context
 - [x] admin API: add / list / delete knowledge documents; tests included
+
+### Phase 21 – Operator vision ✅
+- [x] worker screenshot returns a (downscaled) image; execute() passes image_b64 through the hub
+- [x] screenshot tool attaches the image to ctx.images; agent loop feeds it to the model as image_url
+- [x] operator agent uses a vision model alias (operator-vision, e.g. llama3.2-vision); test included

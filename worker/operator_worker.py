@@ -61,15 +61,19 @@ def _need_gui() -> Any:
     return pyautogui
 
 
-def screenshot(_: dict) -> str:
+def screenshot(_: dict) -> dict:
     gui = _need_gui()
     SHOTS_DIR.mkdir(parents=True, exist_ok=True)
-    path = SHOTS_DIR / f"shot-{int(time.time() * 1000)}.png"
     img = gui.screenshot()
-    img.save(path)
     w, h = img.size
-    data = base64.b64encode(path.read_bytes()).decode()
-    return f"screen {w}x{h}, saved {path}\nimage/png;base64,{data[:200]}…[{len(data)} b64 chars]"
+    # downscale so the base64 payload stays small for the vision model
+    max_w = 1280
+    if w > max_w:
+        img = img.resize((max_w, int(h * max_w / w)))
+    path = SHOTS_DIR / f"shot-{int(time.time() * 1000)}.png"
+    img.save(path)
+    b64 = base64.b64encode(path.read_bytes()).decode()
+    return {"output": f"screen {w}x{h}", "image_b64": b64}
 
 
 def mouse_move(p: dict) -> str:

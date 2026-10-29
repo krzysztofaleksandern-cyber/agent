@@ -128,6 +128,7 @@ class AgentRunner:
         self.operator_hub = operator_hub
         self.services = services or {}
         self.audit = audit
+        self.max_images = 2
 
     def workspace(self, client: str) -> Path:
         path = self.workspaces_dir / safe_name(client)
@@ -186,6 +187,16 @@ class AgentRunner:
                     convo.append({"role": "tool", "tool_call_id": call.id, "content": output})
                 else:
                     convo.append({"role": "user", "content": f"Result of {call.name}:\n{output}"})
+            if ctx.images:
+                content: list[dict[str, Any]] = [
+                    {"type": "text", "text": "Current screen:"},
+                    *(
+                        {"type": "image_url", "image_url": {"url": url}}
+                        for url in ctx.images[-self.max_images :]
+                    ),
+                ]
+                convo.append({"role": "user", "content": content})
+                ctx.images.clear()
 
         convo.append({"role": "user", "content": FINAL_PROMPT})
         resp = await self.llm.chat(convo, model=profile.model, temperature=profile.temperature)

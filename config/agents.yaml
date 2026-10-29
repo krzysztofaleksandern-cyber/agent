@@ -61,7 +61,7 @@ agents:
 
   operator:
     description: Controls the owner's own Windows computer (mouse, keyboard, screen, shell, files).
-    model: general
+    model: operator-vision
     temperature: 0.2
     max_steps: 25
     tools: [screenshot, mouse_move, mouse_click, mouse_scroll, type_text, key_press, os_run, os_shell, os_read_file, os_write_file, os_list_dir]

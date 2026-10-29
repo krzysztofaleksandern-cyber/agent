@@ -20,6 +20,9 @@ async def _call(ctx: ToolContext, action: str, params: dict[str, Any]) -> str:
         raise ToolError(f"computer not reachable: {exc}") from exc
     if not result.get("ok", False):
         raise ToolError(result.get("error", "command failed on the computer"))
+    image_b64 = result.get("image_b64")
+    if image_b64:
+        ctx.images.append(f"data:image/png;base64,{image_b64}")
     return str(result.get("output", ""))
 
 

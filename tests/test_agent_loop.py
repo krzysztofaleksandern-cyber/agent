@@ -212,3 +212,34 @@ async def test_services_passed_to_tools(agents: AgentRegistry, tmp_path: Path) -
     result = await r.run("mailer", [{"role": "user", "content": "check mail"}])
     assert result.content == "no mail"
     assert "(no messages)" in llm.calls[-1]["messages"][-1]["content"]
+
+
+async def test_screenshot_image_fed_to_model(agents: AgentRegistry, tmp_path: Path) -> None:
+    from app.llm.mock import tool_reply
+    from app.operator.hub import OperatorHub
+
+    (tmp_path / "op.yaml").write_text(
+        "agents:\n  op: {model: m, system_prompt: You see., tools: [screenshot]}\n"
+    )
+    reg = AgentRegistry(tmp_path / "op.yaml", ["m"])
+    hub = OperatorHub()
+    await hub.poll(wait_s=0.01)
+
+    import asyncio
+
+    async def worker() -> None:
+        cmd = await hub.poll(wait_s=1)
+        hub.submit_result(cmd["id"], {"ok": True, "output": "screen 100x100", "image_b64": "QUJD"})
+
+    llm = MockLLM([tool_reply("screenshot", "{}", "c1"), "I can see the desktop."])
+    runner = AgentRunner(llm, reg, FakeSandbox(), tmp_path / "ws", operator_hub=hub)
+    task = asyncio.create_task(worker())
+    result = await runner.run("op", [{"role": "user", "content": "look"}])
+    await task
+    assert result.content == "I can see the desktop."
+    # the second LLM call must include an image_url content block
+    last_msgs = llm.calls[-1]["messages"]
+    image_msg = next(m for m in last_msgs if isinstance(m.get("content"), list))
+    blocks = image_msg["content"]
+    assert any(b.get("type") == "image_url" for b in blocks)
+    assert blocks[-1]["image_url"]["url"] == "data:image/png;base64,QUJD"
