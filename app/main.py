@@ -72,7 +72,9 @@ def _load_eval_cases(path: str) -> dict:
 
 
 def _make_services(settings: Settings) -> dict:
-    services: dict = {}
+    from app.connectors.calendar import CalendarStore
+
+    services: dict = {"calendar": CalendarStore(settings.db_path)}
     if settings.email_enabled:
         from app.connectors.email import EmailConfig, ImapSmtpMailbox
 
@@ -191,6 +193,9 @@ def create_app(
         app.state.tasks.close()
         await app.state.webhooks.aclose()
         app.state.llm.usage.save(usage_path)
+        services_cal = app.state.runner.services.get("calendar")
+        if services_cal is not None:
+            services_cal.close()
         app.state.console.close()
         app.state.keys.close()
         if llm is None:

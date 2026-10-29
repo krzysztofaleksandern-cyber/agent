@@ -125,3 +125,8 @@ ruff clean, docs updated, commit, summary, STOP.
 - [x] tools email_list / email_read / email_send (send gated by approval)
 - [x] ToolContext.services registry; AgentRunner passes connectors to tools
 - [x] secretary uses the inbox directly; tests with a fake mailbox
+
+### Phase 17 – Calendar ✅
+- [x] `CalendarStore` (SQLite) with validation and .ics export (import to Outlook/Google)
+- [x] tools calendar_list / calendar_create / calendar_delete (delete gated by approval)
+- [x] secretary and jarvis can manage the calendar; tests included

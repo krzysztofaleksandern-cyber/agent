@@ -91,7 +91,7 @@ agents:
     model: general
     temperature: 0.3
     max_steps: 20
-    tools: [email_list, email_read, email_send, delegate, read_file, write_file, list_dir]
+    tools: [email_list, email_read, email_send, calendar_list, calendar_create, calendar_delete, delegate, read_file, write_file, list_dir]
     delegates: [operator, writer, researcher]
     system_prompt: |
       You are the owner's office secretary. You handle email (email_list, email_read,
@@ -107,7 +107,7 @@ agents:
     model: general
     temperature: 0.3
     max_steps: 15
-    tools: [delegate, read_file, list_dir]
+    tools: [calendar_list, calendar_create, delegate, read_file, list_dir]
     delegates: [operator, codex, writer, auditor, researcher, secretary]
     system_prompt: |
       You are Jarvis, the owner's personal AI chief of staff. Understand the goal, then do it

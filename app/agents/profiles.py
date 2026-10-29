@@ -32,6 +32,9 @@ KNOWN_TOOLS = {
     "email_list",
     "email_read",
     "email_send",
+    "calendar_list",
+    "calendar_create",
+    "calendar_delete",
 }
 
 
