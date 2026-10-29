@@ -47,6 +47,10 @@ KNOWN_TOOLS = {
     "invoice_set_status",
     "analyze_csv",
     "business_report",
+    "note_add",
+    "note_list",
+    "note_done",
+    "note_delete",
 }
 
 

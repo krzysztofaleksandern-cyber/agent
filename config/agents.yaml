@@ -107,7 +107,7 @@ agents:
     model: general
     temperature: 0.3
     max_steps: 15
-    tools: [calendar_list, calendar_create, delegate, read_file, list_dir]
+    tools: [calendar_list, calendar_create, note_add, note_list, note_done, delegate, read_file, list_dir]
     delegates: [operator, codex, writer, auditor, researcher, secretary]
     system_prompt: |
       You are Jarvis, the owner's personal AI chief of staff. Understand the goal, then do it

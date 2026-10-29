@@ -180,3 +180,7 @@ ruff clean, docs updated, commit, summary, STOP.
 - [x] summarize_csv (row/column stats, numeric aggregates, top values) — stdlib csv
 - [x] business_summary/render from invoices + CRM deals; analyze_csv & business_report tools
 - [x] analyst agent; tests included
+
+### Phase 28 – Notes / to-do list ✅
+- [x] NotesStore (SQLite): add/list/done/delete; note_add/list/done/delete tools
+- [x] jarvis manages the owner's personal to-do list; tests included

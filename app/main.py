@@ -82,11 +82,13 @@ def _make_services(settings: Settings) -> dict:
     from app.connectors.calendar import CalendarStore
     from app.connectors.crm import CrmStore
     from app.connectors.invoicing import InvoiceStore
+    from app.connectors.notes import NotesStore
 
     services: dict = {
         "calendar": CalendarStore(settings.db_path),
         "crm": CrmStore(settings.db_path),
         "invoices": InvoiceStore(settings.db_path, settings.company_seller),
+        "notes": NotesStore(settings.db_path),
     }
     if settings.email_enabled:
         from app.connectors.email import EmailConfig, ImapSmtpMailbox
