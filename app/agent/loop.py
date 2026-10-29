@@ -1,5 +1,6 @@
 """Tool-calling agent loop with delegation, approvals and memory hooks."""
 
+import asyncio
 import json
 import logging
 import re
@@ -113,6 +114,7 @@ class AgentRunner:
         http: httpx.AsyncClient | None = None,
         operator_hub: Any = None,
         services: dict[str, Any] | None = None,
+        audit: Any = None,
     ) -> None:
         self.llm = llm
         self.agents = agents
@@ -125,6 +127,7 @@ class AgentRunner:
         self.http = http
         self.operator_hub = operator_hub
         self.services = services or {}
+        self.audit = audit
 
     def workspace(self, client: str) -> Path:
         path = self.workspaces_dir / safe_name(client)
@@ -173,6 +176,12 @@ class AgentRunner:
                 output, ok = await self._execute(call, by_name, ctx)
                 tool_log.append({"step": step, "tool": call.name, "ok": ok,
                                  "args": preview(call.arguments, 120)})  # fmt: skip
+                if self.audit is not None:
+                    note = None if ok else output[:200]
+                    await asyncio.to_thread(
+                        self.audit.record, profile.name, client, call.name,
+                        preview(call.arguments, 200), ok, note,
+                    )  # fmt: skip
                 if native:
                     convo.append({"role": "tool", "tool_call_id": call.id, "content": output})
                 else:

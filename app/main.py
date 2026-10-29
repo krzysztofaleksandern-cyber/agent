@@ -20,6 +20,7 @@ from app.api.operator_routes import router as operator_router
 from app.api.routes import router as api_router
 from app.api.tasks_routes import router as tasks_router
 from app.approvals.gate import ApprovalGate
+from app.audit.log import AuditLog
 from app.config import Settings, get_settings
 from app.console.manager import ConsoleManager
 from app.learning.evaluate import load_cases
@@ -146,6 +147,7 @@ def create_app(
         )
         app.state.learning.apply_active()
         app.state.operator = OperatorHub(dispatch_timeout=settings.operator_dispatch_timeout)
+        app.state.audit = AuditLog(settings.db_path)
         app.state.console = ConsoleManager(
             settings.db_path, settings.console_otp_ttl, settings.console_session_ttl
         )
@@ -159,6 +161,7 @@ def create_app(
             memory=app.state.memory,
             operator_hub=app.state.operator,
             services=_make_services(settings),
+            audit=app.state.audit,
         )
 
         async def run_task(task: Task) -> str:
@@ -197,6 +200,7 @@ def create_app(
         if services_cal is not None:
             services_cal.close()
         app.state.console.close()
+        app.state.audit.close()
         app.state.keys.close()
         if llm is None:
             await app.state.llm.aclose()

@@ -48,6 +48,7 @@ app/
   operator/      Phase 13: command channel to the host worker controlling the owner's PC
   console/       Phase 14: phone PWA (OTP login) to drive the operator agent + approvals
   connectors/    Phase 16+: office connectors (email IMAP/SMTP; calendar, …) behind interfaces
+  audit/         Phase 18: durable log of every tool action (admin + console)
   learning/      Phase 10: dataset builder, LoRA training job, model versioning, eval, rollback
 config/          models.yaml, agents.yaml, eval.yaml
 training/        GPU-box fine-tuning (Unsloth QLoRA) + run_cycle.sh

@@ -118,3 +118,8 @@ async def answer(
     if not request.app.state.approvals.resolve(approval_id, decision):
         raise HTTPException(status_code=404, detail={"message": "no such pending approval"})
     return {"id": approval_id, "approved": decision}
+
+
+@router.get("/api/activity")
+async def activity(request: Request, _: str = Depends(require_session)) -> list[dict[str, Any]]:
+    return [e.public() for e in request.app.state.audit.recent(30)]

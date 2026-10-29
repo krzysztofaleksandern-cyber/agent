@@ -152,3 +152,13 @@ async def upsert_agent(
     except (TypeError, ValueError) as exc:
         return _error(400, str(exc), "invalid_request_error")
     return {name: profile.to_dict()}
+
+
+@router.get("/admin/audit")
+async def audit(
+    request: Request,
+    limit: int = 100,
+    agent: str | None = None,
+    _: Principal = Depends(require_admin),
+) -> list[dict[str, Any]]:
+    return [e.public() for e in request.app.state.audit.recent(min(limit, 500), agent)]

@@ -318,3 +318,15 @@ def test_console_pwa_flow(client: TestClient) -> None:
     # logout invalidates the session
     assert client.post("/console/api/logout", headers=h).json() == {"ok": True}
     assert client.get("/console/api/status", headers=h).status_code == 401
+
+
+def test_admin_audit_and_console_activity(client: TestClient, key: str) -> None:
+    client.app.state.audit.record("operator", "console", "os_shell", "ls", True)
+    assert client.get("/v1/admin/audit", headers=auth(key)).status_code == 403
+    rows = client.get("/v1/admin/audit", headers=auth(ADMIN)).json()
+    assert rows and rows[0]["tool"] == "os_shell" and rows[0]["ok"] is True
+    # console session can see recent activity
+    otp, _ = client.app.state.console.create_otp()
+    tok = client.post("/console/api/login", json={"otp": otp}).json()["token"]
+    act = client.get("/console/api/activity", headers={"Authorization": "Bearer " + tok})
+    assert act.status_code == 200 and act.json()[0]["tool"] == "os_shell"
