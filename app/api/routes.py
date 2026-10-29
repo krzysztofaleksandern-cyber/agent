@@ -162,3 +162,28 @@ async def audit(
     _: Principal = Depends(require_admin),
 ) -> list[dict[str, Any]]:
     return [e.public() for e in request.app.state.audit.recent(min(limit, 500), agent)]
+
+
+class Lead(BaseModel):
+    name: str = Field(min_length=1, max_length=200)
+    email: str = Field(default="", max_length=200)
+    phone: str = Field(default="", max_length=50)
+    company: str = Field(default="", max_length=200)
+    message: str = Field(default="", max_length=4000)
+    source: str = Field(default="website", max_length=100)
+
+
+@router.post("/leads", status_code=201)
+async def capture_lead(
+    body: Lead, request: Request, principal: Principal = Depends(require_api_key)
+) -> dict[str, Any]:
+    crm = request.app.state.runner.services.get("crm")
+    if crm is None:
+        return _error(503, "CRM not available", "server_error")
+    import asyncio
+
+    result = await asyncio.to_thread(
+        crm.capture_lead, body.name, body.email, body.phone, body.company, body.message, body.source
+    )
+    log.info("lead captured via %s by %s", body.source, principal.label)
+    return result

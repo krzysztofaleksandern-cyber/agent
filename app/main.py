@@ -78,8 +78,12 @@ def _load_eval_cases(path: str) -> dict:
 
 def _make_services(settings: Settings) -> dict:
     from app.connectors.calendar import CalendarStore
+    from app.connectors.crm import CrmStore
 
-    services: dict = {"calendar": CalendarStore(settings.db_path)}
+    services: dict = {
+        "calendar": CalendarStore(settings.db_path),
+        "crm": CrmStore(settings.db_path),
+    }
     if settings.email_enabled:
         from app.connectors.email import EmailConfig, ImapSmtpMailbox
 

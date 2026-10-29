@@ -150,3 +150,8 @@ ruff clean, docs updated, commit, summary, STOP.
 - [x] worker screenshot returns a (downscaled) image; execute() passes image_b64 through the hub
 - [x] screenshot tool attaches the image to ctx.images; agent loop feeds it to the model as image_url
 - [x] operator agent uses a vision model alias (operator-vision, e.g. llama3.2-vision); test included
+
+### Phase 22 – CRM + lead capture ✅
+- [x] `CrmStore` (SQLite): contacts (email de-dupe) and deals with stages; lead capture
+- [x] tools crm_add_contact / crm_find_contact / crm_add_deal / crm_list_deals / crm_set_stage
+- [x] POST /v1/leads for website forms (client key); sales + support agents; tests included

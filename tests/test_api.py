@@ -372,3 +372,17 @@ def test_knowledge_api(client: TestClient, key: str) -> None:
     assert any(d["doc_id"] == doc_id for d in docs)
     assert client.delete(f"/v1/admin/knowledge/{doc_id}", headers=auth(ADMIN)).status_code == 200
     assert client.delete(f"/v1/admin/knowledge/{doc_id}", headers=auth(ADMIN)).status_code == 404
+
+
+def test_lead_capture_api(client: TestClient, key: str) -> None:
+    r = client.post(
+        "/v1/leads",
+        json={"name": "Klient Test", "email": "k@test.pl", "message": "Potrzebuję strony"},
+        headers=auth(key),
+    )
+    assert r.status_code == 201
+    crm = client.app.state.runner.services["crm"]
+    assert crm.get_contact(r.json()["contact_id"]).email == "k@test.pl"
+    assert crm.get_deal(r.json()["deal_id"]).stage == "new"
+    # needs a key
+    assert client.post("/v1/leads", json={"name": "x"}).status_code == 401

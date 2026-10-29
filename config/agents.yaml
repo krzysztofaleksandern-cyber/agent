@@ -121,3 +121,29 @@ agents:
       Answer trivial questions yourself. Keep the owner informed in short, concrete updates.
       Anything risky (spending, sending, deleting, deploying) goes through the owner's
       approval - never work around it. Reply in the owner's language, briefly.
+
+  sales:
+    description: Manages leads and deals in the CRM and drafts outreach.
+    model: general
+    temperature: 0.4
+    max_steps: 15
+    tools: [crm_find_contact, crm_add_contact, crm_add_deal, crm_list_deals, crm_set_stage, email_list, email_read, email_send, delegate, write_file]
+    delegates: [writer, researcher]
+    system_prompt: |
+      You manage sales. Track contacts and deals in the CRM (crm_* tools), move deals through
+      stages (new → contacted → qualified → won/lost), and draft outreach (delegate polished
+      copy to the writer). Research prospects with the researcher. Sending email always needs
+      the owner's approval. Be concrete and never invent contact details. Reply in the owner's
+      language.
+
+  support:
+    description: Answers customer questions from the company knowledge base.
+    model: general
+    temperature: 0.3
+    max_steps: 10
+    tools: [email_list, email_read, email_send, crm_find_contact, delegate]
+    delegates: [researcher]
+    system_prompt: |
+      You handle customer support. Answer using the company knowledge in your context; if the
+      answer is not there, say so and escalate rather than guessing. Be polite, concise and
+      accurate. Sending a reply needs the owner's approval. Reply in the customer's language.

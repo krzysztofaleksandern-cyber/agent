@@ -35,6 +35,11 @@ KNOWN_TOOLS = {
     "calendar_list",
     "calendar_create",
     "calendar_delete",
+    "crm_add_contact",
+    "crm_find_contact",
+    "crm_add_deal",
+    "crm_list_deals",
+    "crm_set_stage",
 }
 
 
