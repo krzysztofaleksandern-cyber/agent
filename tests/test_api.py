@@ -357,3 +357,18 @@ def test_jobs_admin_api(client: TestClient, key: str) -> None:
     assert client.post("/v1/admin/jobs", json=ghost, headers=auth(ADMIN)).status_code == 404
     assert client.delete(f"/v1/admin/jobs/{jid}", headers=auth(ADMIN)).status_code == 200
     assert client.delete(f"/v1/admin/jobs/{jid}", headers=auth(ADMIN)).status_code == 404
+
+
+def test_knowledge_api(client: TestClient, key: str) -> None:
+    assert client.get("/v1/admin/knowledge", headers=auth(key)).status_code == 403
+    r = client.post(
+        "/v1/admin/knowledge",
+        json={"title": "Zasady", "text": "Faktury płatne w 14 dni."},
+        headers=auth(ADMIN),
+    )
+    assert r.status_code == 200 and r.json()["chunks"] >= 1
+    doc_id = r.json()["doc_id"]
+    docs = client.get("/v1/admin/knowledge", headers=auth(ADMIN)).json()
+    assert any(d["doc_id"] == doc_id for d in docs)
+    assert client.delete(f"/v1/admin/knowledge/{doc_id}", headers=auth(ADMIN)).status_code == 200
+    assert client.delete(f"/v1/admin/knowledge/{doc_id}", headers=auth(ADMIN)).status_code == 404

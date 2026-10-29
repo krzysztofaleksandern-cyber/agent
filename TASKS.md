@@ -140,3 +140,8 @@ ruff clean, docs updated, commit, summary, STOP.
 - [x] `JobStore` (SQLite) + `compute_next` for every_minutes / daily HH:MM / weekly D:HH:MM (UTC)
 - [x] `SchedulerLoop` fires due jobs into the task queue for the chosen agent
 - [x] admin API: list/create/toggle/delete jobs; tests for schedules and firing
+
+### Phase 20 – Company knowledge base (RAG) ✅
+- [x] knowledge table in MemoryStore; chunking + embeddings; cosine search
+- [x] MemoryService.ingest; relevant chunks injected into every agent's context
+- [x] admin API: add / list / delete knowledge documents; tests included

@@ -22,6 +22,11 @@ class LessonIn(BaseModel):
     text: str = Field(min_length=3, max_length=1000)
 
 
+class KnowledgeIn(BaseModel):
+    title: str = Field(min_length=1, max_length=200)
+    text: str = Field(min_length=1, max_length=200_000)
+
+
 @router.post("/feedback")
 async def feedback(
     body: Feedback, request: Request, principal: Principal = Depends(require_api_key)
@@ -58,3 +63,27 @@ async def delete_lesson(
     if not request.app.state.memory.store.delete_lesson(lesson_id):
         raise HTTPException(status_code=404, detail={"message": "lesson not found"})
     return {"deleted": lesson_id}
+
+
+@router.post("/admin/knowledge")
+async def add_knowledge(
+    body: KnowledgeIn, request: Request, _: Principal = Depends(require_admin)
+) -> dict[str, Any]:
+    return await request.app.state.memory.ingest(body.title, body.text)
+
+
+@router.get("/admin/knowledge")
+async def list_knowledge(
+    request: Request, _: Principal = Depends(require_admin)
+) -> list[dict[str, Any]]:
+    return await asyncio.to_thread(request.app.state.memory.store.list_documents)
+
+
+@router.delete("/admin/knowledge/{doc_id}")
+async def delete_knowledge(
+    doc_id: str, request: Request, _: Principal = Depends(require_admin)
+) -> dict[str, Any]:
+    removed = await asyncio.to_thread(request.app.state.memory.store.delete_document, doc_id)
+    if not removed:
+        raise HTTPException(status_code=404, detail={"message": "document not found"})
+    return {"deleted": doc_id, "chunks": removed}

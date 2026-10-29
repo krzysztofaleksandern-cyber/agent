@@ -93,3 +93,24 @@ async def test_global_lessons_and_embedding_failure(store: MemoryStore) -> None:
     assert "Never commit secrets" in await broken.context("codex", "anything")
     iid = await broken.record("codex", "c", [{"role": "user", "content": "q"}], "a")
     assert iid is not None  # still recorded, just without embedding
+
+
+async def test_knowledge_ingest_and_rag(store: MemoryStore) -> None:
+    svc = MemoryService(store, HashEmbedder(), reflect=False, min_score=0.2)
+    info = await svc.ingest("Cennik", "Strona WWW kosztuje 5000 zł netto.\n\nHosting 50 zł/mies.")
+    assert info["chunks"] >= 1
+    docs = store.list_documents()
+    assert docs[0]["title"] == "Cennik" and docs[0]["doc_id"] == info["doc_id"]
+    ctx = await svc.context("secretary", "ile kosztuje strona www")
+    assert "company knowledge" in ctx and "5000" in ctx
+    assert store.delete_document(info["doc_id"]) >= 1
+    assert "5000" not in await svc.context("secretary", "ile kosztuje strona www")
+
+
+def test_chunk_text() -> None:
+    from app.memory.service import chunk_text
+
+    assert chunk_text("") == []
+    assert chunk_text("short") == ["short"]
+    chunks = chunk_text("a\n\n" + "x" * 2500, max_chars=1000)
+    assert len(chunks) >= 3 and all(len(c) <= 1000 for c in chunks)

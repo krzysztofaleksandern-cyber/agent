@@ -33,6 +33,16 @@ CREATE TABLE IF NOT EXISTS lessons (
     created_at REAL NOT NULL
 );
 CREATE INDEX IF NOT EXISTS lessons_agent ON lessons (agent);
+CREATE TABLE IF NOT EXISTS knowledge (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    doc_id TEXT NOT NULL,
+    title TEXT NOT NULL,
+    chunk_index INTEGER NOT NULL,
+    text TEXT NOT NULL,
+    embedding TEXT,
+    created_at REAL NOT NULL
+);
+CREATE INDEX IF NOT EXISTS knowledge_doc ON knowledge (doc_id);
 """
 
 
@@ -59,6 +69,16 @@ class Lesson:
 
     def public(self) -> dict[str, Any]:
         return self.__dict__.copy()
+
+
+@dataclass(frozen=True)
+class KnowledgeChunk:
+    id: int
+    doc_id: str
+    title: str
+    chunk_index: int
+    text: str
+    created_at: float
 
 
 def _dump(vec: Vector | None) -> str | None:
@@ -165,6 +185,35 @@ class MemoryStore:
         ).fetchall()
         return _top(rows, query, k, min_score, _interaction)
 
+    def add_knowledge_chunk(
+        self, doc_id: str, title: str, index: int, text: str, embedding: Vector | None
+    ) -> None:
+        self._write(
+            "INSERT INTO knowledge (doc_id, title, chunk_index, text, embedding, created_at)"
+            " VALUES (?, ?, ?, ?, ?, ?)",
+            (doc_id, title, index, text, _dump(embedding), time.time()),
+        )
+
+    def search_knowledge(
+        self, query: Vector, k: int, min_score: float
+    ) -> list[tuple[float, KnowledgeChunk]]:
+        rows = self._conn.execute("SELECT * FROM knowledge WHERE embedding IS NOT NULL").fetchall()
+        return _top(rows, query, k, min_score, _knowledge)
+
+    def list_documents(self) -> list[dict[str, Any]]:
+        rows = self._conn.execute(
+            "SELECT doc_id, title, COUNT(*) n, MIN(created_at) created_at"
+            " FROM knowledge GROUP BY doc_id, title ORDER BY created_at DESC"
+        ).fetchall()
+        return [
+            {"doc_id": r["doc_id"], "title": r["title"], "chunks": r["n"],
+             "created_at": r["created_at"]}
+            for r in rows
+        ]  # fmt: skip
+
+    def delete_document(self, doc_id: str) -> int:
+        return self._write("DELETE FROM knowledge WHERE doc_id = ?", (doc_id,)).rowcount
+
 
 def _top(rows, query, k, min_score, build):
     scored = [(cosine(query, json.loads(r["embedding"])), r) for r in rows]
@@ -193,5 +242,16 @@ def _lesson(row: sqlite3.Row) -> Lesson:
         text=row["text"],
         source=row["source"],
         interaction_id=row["interaction_id"],
+        created_at=row["created_at"],
+    )
+
+
+def _knowledge(row: sqlite3.Row) -> KnowledgeChunk:
+    return KnowledgeChunk(
+        id=row["id"],
+        doc_id=row["doc_id"],
+        title=row["title"],
+        chunk_index=row["chunk_index"],
+        text=row["text"],
         created_at=row["created_at"],
     )
