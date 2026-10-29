@@ -175,3 +175,8 @@ ruff clean, docs updated, commit, summary, STOP.
 - [x] TelegramClient (send, set_webhook) over httpx; parse_update
 - [x] POST /v1/telegram/webhook (secret-token checked, chat-id allowlist) -> jarvis task
 - [x] task notifier replies to telegram:<chat_id> tasks; tests included
+
+### Phase 27 – Analyst (data + business KPIs) ✅
+- [x] summarize_csv (row/column stats, numeric aggregates, top values) — stdlib csv
+- [x] business_summary/render from invoices + CRM deals; analyze_csv & business_report tools
+- [x] analyst agent; tests included

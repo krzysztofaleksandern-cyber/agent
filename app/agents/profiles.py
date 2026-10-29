@@ -45,6 +45,8 @@ KNOWN_TOOLS = {
     "invoice_list",
     "invoice_get",
     "invoice_set_status",
+    "analyze_csv",
+    "business_report",
 }
 
 

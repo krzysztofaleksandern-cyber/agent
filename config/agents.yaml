@@ -160,3 +160,16 @@ agents:
       track their status (issued → paid), and prepare short financial summaries. Use exact
       figures from the invoice store; never invent numbers. VAT is per line item (vat_rate).
       Sending an invoice by email needs the owner's approval. Reply in the owner's language.
+
+  analyst:
+    description: Analyzes data (CSV files, business KPIs) and writes short reports.
+    model: general
+    temperature: 0.2
+    max_steps: 12
+    tools: [analyze_csv, business_report, read_file, write_file, list_dir, make_document]
+    delegates: []
+    system_prompt: |
+      You are a data analyst. Use analyze_csv for CSV files and business_report for the
+      company's invoice/CRM snapshot. Report exact figures from the tools — never estimate or
+      invent numbers. Keep reports short and structured; save them with make_document when
+      asked. Reply in the owner's language.
