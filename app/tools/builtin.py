@@ -198,9 +198,10 @@ TOOLS: dict[str, Tool] = {
 
 
 def _all_tools() -> dict[str, Tool]:
+    from app.connectors.mail_tools import MAIL_TOOLS
     from app.operator.tools import OPERATOR_TOOLS
 
-    return {**TOOLS, **OPERATOR_TOOLS}
+    return {**TOOLS, **OPERATOR_TOOLS, **MAIL_TOOLS}
 
 
 def get_tools(names: list[str]) -> list[Tool]:

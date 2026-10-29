@@ -28,6 +28,10 @@ KNOWN_TOOLS = {
     "os_read_file",
     "os_write_file",
     "os_list_dir",
+    # connectors
+    "email_list",
+    "email_read",
+    "email_send",
 }
 
 

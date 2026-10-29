@@ -119,3 +119,9 @@ ruff clean, docs updated, commit, summary, STOP.
 - [x] `secretary` (office admin via operator) and `researcher` (web + summaries) agents
 - [x] ASSEMBLY.md (full end-to-end setup incl. VoiceStudio voice loop), ROADMAP.md (path to 95%-office)
 - [x] tests for the new agent profiles
+
+### Phase 16 – Email connector ✅
+- [x] `ImapSmtpMailbox` (stdlib IMAP/SMTP) behind a `Mailbox` interface; `EmailConfig` from .env
+- [x] tools email_list / email_read / email_send (send gated by approval)
+- [x] ToolContext.services registry; AgentRunner passes connectors to tools
+- [x] secretary uses the inbox directly; tests with a fake mailbox

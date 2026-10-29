@@ -71,6 +71,25 @@ def _load_eval_cases(path: str) -> dict:
     return load_cases(path) if Path(path).exists() else {}
 
 
+def _make_services(settings: Settings) -> dict:
+    services: dict = {}
+    if settings.email_enabled:
+        from app.connectors.email import EmailConfig, ImapSmtpMailbox
+
+        services["mailbox"] = ImapSmtpMailbox(
+            EmailConfig(
+                imap_host=settings.email_imap_host,
+                smtp_host=settings.email_smtp_host or settings.email_imap_host,
+                username=settings.email_username,
+                password=settings.email_password.get_secret_value(),
+                from_addr=settings.email_from or settings.email_username,
+                imap_port=settings.email_imap_port,
+                smtp_port=settings.email_smtp_port,
+            )
+        )
+    return services
+
+
 def create_app(
     settings: Settings | None = None,
     llm: LLMClient | None = None,
@@ -137,6 +156,7 @@ def create_app(
             approver=app.state.approvals,
             memory=app.state.memory,
             operator_hub=app.state.operator,
+            services=_make_services(settings),
         )
 
         async def run_task(task: Task) -> str:

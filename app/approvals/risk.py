@@ -33,6 +33,7 @@ _OPERATOR_RISKY = {
     "os_run": "launches a program on your computer",
     "os_write_file": "writes a file on your computer",
     "os_delete": "deletes files on your computer",
+    "email_send": "sends an email",
 }
 
 

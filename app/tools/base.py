@@ -29,6 +29,7 @@ class ToolContext:
     delegate: DelegateFn | None = None
     delegates: list[str] = field(default_factory=list)
     operator_hub: Any = None  # OperatorHub, set for the operator agent only
+    services: dict[str, Any] = field(default_factory=dict)  # named connectors (mailbox, …)
 
 
 Handler = Callable[[dict[str, Any], ToolContext], Awaitable[str]]

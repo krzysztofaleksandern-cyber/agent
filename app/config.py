@@ -65,6 +65,19 @@ class Settings(BaseSettings):
     console_otp_ttl: float = 300.0
     console_session_ttl: float = 43200.0
 
+    # Email connector (optional; enables the secretary's inbox)
+    email_imap_host: str = ""
+    email_smtp_host: str = ""
+    email_username: str = ""
+    email_password: SecretStr = SecretStr("")
+    email_from: str = ""
+    email_imap_port: int = 993
+    email_smtp_port: int = 587
+
+    @property
+    def email_enabled(self) -> bool:
+        return bool(self.email_imap_host and self.email_username)
+
     @property
     def http_allowlist_list(self) -> list[str]:
         return [d.strip().lower() for d in self.http_allowlist.split(",") if d.strip()]

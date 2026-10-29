@@ -193,3 +193,22 @@ def test_parse_text_tool_calls() -> None:
 def test_safe_name() -> None:
     assert safe_name("../evil") == ".._evil"
     assert safe_name("") == "default"
+
+
+async def test_services_passed_to_tools(agents: AgentRegistry, tmp_path: Path) -> None:
+    from app.llm.mock import tool_reply
+
+    (tmp_path / "agents2.yaml").write_text(
+        "agents:\n  mailer: {model: m, system_prompt: You mail., tools: [email_list]}\n"
+    )
+    reg = AgentRegistry(tmp_path / "agents2.yaml", ["m"])
+
+    class FakeMB:
+        def list_sync(self, folder, limit):
+            return []
+
+    llm = MockLLM([tool_reply("email_list", "{}", "c1"), "no mail"])
+    r = AgentRunner(llm, reg, FakeSandbox(), tmp_path / "ws", services={"mailbox": FakeMB()})
+    result = await r.run("mailer", [{"role": "user", "content": "check mail"}])
+    assert result.content == "no mail"
+    assert "(no messages)" in llm.calls[-1]["messages"][-1]["content"]
